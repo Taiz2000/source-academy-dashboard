@@ -7,6 +7,8 @@ import { BACKEND_URL } from './config';
 type StoredSession = {
   accessToken?: string;
   refreshToken?: string;
+  /** Course registration id (= student.id in grading rows) for `courseId`. */
+  courseRegId?: number;
   courseId?: number;
   courseShortName?: string;
   role?: string;
@@ -37,6 +39,15 @@ export function readStoredSession(): StoredSession | null {
 export function currentCourseId(): number | null {
   const match = /^\/courses\/(\d+)(?:\/|$)/.exec(location.pathname);
   return match ? Number(match[1]) : (readStoredSession()?.courseId ?? null);
+}
+
+/**
+ * Your course registration id in `courseId`, or null if unknown. The stored session only describes
+ * the course last selected in the app, which may differ from the one in this tab's URL.
+ */
+export function ownCourseRegId(courseId: number): number | null {
+  const session = readStoredSession();
+  return session?.courseId === courseId ? (session.courseRegId ?? null) : null;
 }
 
 // Tokens we refreshed ourselves, valid until the app stores a newer access token of its own.

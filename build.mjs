@@ -14,7 +14,7 @@ copyFileSync('src/manifest.json', 'dist/manifest.json');
 copyFileSync('src/popup/popup.html', 'dist/popup.html');
 
 const ctx = await esbuild.context({
-  entryPoints: { content: 'src/content/index.tsx', popup: 'src/popup/popup.ts' },
+  entryPoints: { content: 'src/content/index.tsx', popup: 'src/popup/popup.tsx' },
   outdir: 'dist',
   bundle: true,
   format: 'iife',

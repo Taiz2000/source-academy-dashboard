@@ -39,6 +39,10 @@ export type Submission = {
   studentName: string;
   studentUsername: string;
   groupName: string;
+  /** Course registration ids of the student, or of every team member. */
+  memberIds: number[];
+  /** Group of each member ("-" for none), parallel to memberIds. */
+  memberGroups: string[];
   progress: Progress;
   gradedCount: number;
   questionCount: number;
@@ -69,6 +73,8 @@ export function normalize(s: RawSubmission): Submission {
     studentName: members.map(m => m.name).join(', '),
     studentUsername: members.map(m => m.username).join(', '),
     groupName: members[0]?.groupName ?? '-',
+    memberIds: members.map(m => m.id),
+    memberGroups: members.map(m => m.groupName ?? '-'),
     progress: toProgress(s),
     gradedCount: s.gradedCount ?? 0,
     questionCount: s.assessment.questionCount,

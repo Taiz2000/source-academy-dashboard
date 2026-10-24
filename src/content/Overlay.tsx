@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 
+import { saveSeenGroups } from '../settings';
+import { useSettings } from '../useSettings';
 import { fetchAllSubmissions, type FetchResult } from './api';
-import { countByProgress, normalize, PROGRESS_LABEL, PROGRESS_ORDER } from './model';
+import { applySettingsFilters } from './filters';
+import { countByProgress, normalize, PROGRESS_LABEL, PROGRESS_ORDER, uniqueSorted } from './model';
+import { ownCourseRegId } from './session';
 import { SubmissionTable } from './SubmissionTable';
 
 type Props = {
@@ -29,9 +33,24 @@ export function Overlay({ courseId, onClose }: Props) {
     };
   }, [courseId, group, reloadKey]);
 
+  const settings = useSettings();
+  const ownId = useMemo(() => ownCourseRegId(courseId), [courseId]);
+
   const rows = useMemo(() => result?.response.data.map(normalize) ?? [], [result]);
-  const counts = useMemo(() => countByProgress(rows), [rows]);
+  const filtered = useMemo(
+    () => (settings ? applySettingsFilters(rows, settings, ownId) : null),
+    [rows, settings, ownId],
+  );
+  const visible = filtered?.visible ?? [];
+  const counts = useMemo(() => countByProgress(visible), [visible]);
   const serverCount = result?.response.count ?? 0;
+  const hiddenTotal = filtered ? filtered.hidden.own + filtered.hidden.groups : 0;
+
+  // Offer the groups from the latest fetch as suggestions in the popup's "Hide groups" list.
+  useEffect(() => {
+    if (rows.length === 0) return;
+    saveSeenGroups(uniqueSorted(rows.flatMap(r => r.memberGroups).filter(g => g !== '-')));
+  }, [rows]);
 
   return (
     <div class="panel">
@@ -63,6 +82,18 @@ export function Overlay({ courseId, onClose }: Props) {
             Fetched <strong>{rows.length}</strong> rows (server count: {serverCount}) in{' '}
             <strong>{result.ms} ms</strong> at {result.fetchedAt.toLocaleTimeString()}.
           </p>
+          {hiddenTotal > 0 && (
+            <p class="muted">
+              Hidden by settings: {hiddenTotal} rows (own: {filtered!.hidden.own}, groups:{' '}
+              {filtered!.hidden.groups}). Showing {visible.length}.
+            </p>
+          )}
+          {filtered?.ownIdUnknown && (
+            <p class="error">
+              Couldn't determine your id for course {courseId}, so your own submissions are not
+              hidden. Select this course in Source Academy and reload the page.
+            </p>
+          )}
           {rows.length < serverCount && (
             <p class="error">
               Only {rows.length} of {serverCount} rows returned — the page size cap was hit.
@@ -84,7 +115,7 @@ export function Overlay({ courseId, onClose }: Props) {
             </details>
           )}
 
-          <SubmissionTable courseId={courseId} rows={rows} />
+          <SubmissionTable courseId={courseId} rows={visible} />
         </>
       )}
     </div>
