@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Source Academy Grading Dashboard",
+  "version": "0.1.0",
+  "description": "Adds a client-side grading dashboard to Source Academy.",
+  "content_scripts": [
+    {
+      "matches": ["https://sourceacademy.nus.edu.sg/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "source-academy-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard extension for Source Academy",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "dev": "node build.mjs --dev",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Taiz2000/source-academy-dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Taiz2000/source-academy-dashboard/issues"
+  },
+  "homepage": "https://github.com/Taiz2000/source-academy-dashboard#readme",
+  "devDependencies": {
+    "@types/chrome": "^0.3.6",
+    "esbuild": "^0.25.12",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "lz-string": "^1.5.0",
+    "preact": "^10.29.8"
+  },
+  "private": true,
+  "type": "module"
+}
