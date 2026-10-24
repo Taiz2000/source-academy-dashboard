@@ -21,15 +21,15 @@ export function applySettingsFilters(
   const hidden: HiddenCounts = { own: 0, groups: 0 };
 
   const visible = rows.filter(r => {
-    if (hideOwn && r.memberIds.includes(ownId)) {
+    if (hideOwn && r.members.some(m => m.id === ownId)) {
       hidden.own++;
       return false;
     }
     // Team rows are hidden only when every member is in a hidden group.
     if (
       hiddenGroups &&
-      r.memberGroups.length > 0 &&
-      r.memberGroups.every(g => hiddenGroups.has(groupKey(g)))
+      r.members.length > 0 &&
+      r.members.every(m => hiddenGroups.has(groupKey(m.groupName)))
     ) {
       hidden.groups++;
       return false;

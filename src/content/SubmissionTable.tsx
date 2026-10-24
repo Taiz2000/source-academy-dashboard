@@ -1,19 +1,10 @@
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-
 import { PROGRESS_LABEL, type Submission } from './model';
+import { SpacerRow } from './panels/common';
+import { useWindowedRows } from './useWindowedRows';
 
-// Rows have a fixed height so only the visible slice (plus overscan) needs to be in the DOM;
-// spacer rows above and below stand in for the rest. Keeps 100k rows scrollable.
+// Must match the th/td height in overlay.css.
 const ROW_HEIGHT = 28;
-const OVERSCAN = 20;
-
 const COLUMN_COUNT = 8;
-
-const SpacerRow = ({ height }: { height: number }) => (
-  <tr>
-    <td class="spacer-cell" colSpan={COLUMN_COUNT} style={{ height }} />
-  </tr>
-);
 
 type Props = {
   courseId: number;
@@ -21,26 +12,13 @@ type Props = {
 };
 
 export function SubmissionTable({ courseId, rows }: Props) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(0);
-
-  useLayoutEffect(() => {
-    const el = scrollRef.current!;
-    const observer = new ResizeObserver(() => setViewportHeight(el.clientHeight));
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const start = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
-  const end = Math.min(rows.length, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + OVERSCAN);
+  const { scrollRef, onScroll, start, end, topHeight, bottomHeight } = useWindowedRows(
+    rows.length,
+    ROW_HEIGHT,
+  );
 
   return (
-    <div
-      class="table-scroll"
-      ref={scrollRef}
-      onScroll={e => setScrollTop((e.currentTarget as HTMLDivElement).scrollTop)}
-    >
+    <div class="table-scroll" ref={scrollRef} onScroll={onScroll}>
       <table>
         <colgroup>
           <col style={{ width: '27%' }} />
@@ -65,7 +43,7 @@ export function SubmissionTable({ courseId, rows }: Props) {
           </tr>
         </thead>
         <tbody>
-          {start > 0 && <SpacerRow height={start * ROW_HEIGHT} />}
+          <SpacerRow height={topHeight} columns={COLUMN_COUNT} />
           {rows.slice(start, end).map(r => (
             <tr key={r.id}>
               <td>
@@ -91,7 +69,7 @@ export function SubmissionTable({ courseId, rows }: Props) {
               </td>
             </tr>
           ))}
-          {end < rows.length && <SpacerRow height={(rows.length - end) * ROW_HEIGHT} />}
+          <SpacerRow height={bottomHeight} columns={COLUMN_COUNT} />
         </tbody>
       </table>
     </div>

@@ -27,6 +27,32 @@ header {
   flex: 1;
 }
 
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tabs button[aria-selected='true'] {
+  background: #2d72d2;
+  border-color: #2d72d2;
+}
+
+/* One tab's content, filling the space under the header. */
+.panel-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+}
+
 .muted {
   color: #abb3bf;
 }
@@ -72,7 +98,7 @@ table {
   border-collapse: collapse;
 }
 
-/* Must match ROW_HEIGHT in SubmissionTable.tsx. */
+/* Must match ROW_HEIGHT in SubmissionTable.tsx and HeatmapGrid.tsx. */
 th,
 td {
   box-sizing: border-box;
@@ -91,9 +117,42 @@ td {
 }
 
 th {
+  background: #252a31;
+}
+
+thead th {
   position: sticky;
   top: 0;
-  background: #252a31;
+  z-index: 2;
+}
+
+/* Heatmap: sticky student column, compact centred cells. */
+.heatmap th.name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  font-weight: normal;
+}
+
+.heatmap thead th.name {
+  z-index: 3;
+  font-weight: bold;
+}
+
+.heatmap .cell {
+  padding: 0 2px;
+  text-align: center;
+  border-left: 1px solid #383e47;
+}
+
+.heatmap td.cell a {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.heatmap td.cell a:hover {
+  text-decoration: underline;
 }
 
 a {

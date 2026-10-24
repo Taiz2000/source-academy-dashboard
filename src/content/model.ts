@@ -30,6 +30,15 @@ export const PROGRESS_LABEL: Record<Progress, string> = {
   autograded: 'Autograded',
 };
 
+export type Member = {
+  /** Course registration id. */
+  id: number;
+  name: string;
+  username: string;
+  /** "-" when the student has no group. */
+  groupName: string;
+};
+
 export type Submission = {
   id: number;
   assessmentId: number;
@@ -39,10 +48,8 @@ export type Submission = {
   studentName: string;
   studentUsername: string;
   groupName: string;
-  /** Course registration ids of the student, or of every team member. */
-  memberIds: number[];
-  /** Group of each member ("-" for none), parallel to memberIds. */
-  memberGroups: string[];
+  /** The student, or every member of the team. */
+  members: Member[];
   progress: Progress;
   gradedCount: number;
   questionCount: number;
@@ -61,9 +68,15 @@ export function toProgress(s: RawSubmission): Progress {
 }
 
 export function normalize(s: RawSubmission): Submission {
-  const members: RawUser[] = s.student
+  const users: RawUser[] = s.student
     ? [s.student]
     : (s.team?.team_members.filter((m): m is RawUser => m !== null) ?? []);
+  const members: Member[] = users.map(u => ({
+    id: u.id,
+    name: u.name,
+    username: u.username,
+    groupName: u.groupName ?? '-',
+  }));
   return {
     id: s.id,
     assessmentId: s.assessment.id,
@@ -73,8 +86,7 @@ export function normalize(s: RawSubmission): Submission {
     studentName: members.map(m => m.name).join(', '),
     studentUsername: members.map(m => m.username).join(', '),
     groupName: members[0]?.groupName ?? '-',
-    memberIds: members.map(m => m.id),
-    memberGroups: members.map(m => m.groupName ?? '-'),
+    members,
     progress: toProgress(s),
     gradedCount: s.gradedCount ?? 0,
     questionCount: s.assessment.questionCount,
