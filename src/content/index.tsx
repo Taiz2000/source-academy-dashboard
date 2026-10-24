@@ -1,6 +1,7 @@
 import { render } from 'preact';
 
-import { installNavButton } from './navbar';
+import { loadSettings, onSettingsChanged } from '../settings';
+import { installNavButton, type NavButton } from './navbar';
 import { Overlay } from './Overlay';
 import overlayCss from './overlay.css';
 import { currentCourseId } from './session';
@@ -40,13 +41,26 @@ function closeOverlay() {
   nav.setActive(false);
 }
 
-const nav = installNavButton(
-  () => (host ? closeOverlay() : openOverlay()),
-  // The navbar re-renders on route changes; close if the user navigated away underneath us.
-  () => {
-    if (host && location.pathname !== openedAtPath) closeOverlay();
-  },
-);
+let nav: NavButton;
+
+async function main() {
+  const settings = await loadSettings();
+  nav = installNavButton(
+    () => (host ? closeOverlay() : openOverlay()),
+    // The navbar re-renders on route changes; close if the user navigated away underneath us.
+    () => {
+      if (host && location.pathname !== openedAtPath) closeOverlay();
+    },
+    settings,
+  );
+  onSettingsChanged(changes => {
+    if (changes.replaceGameSimulator !== undefined) {
+      nav.setReplaceGameSimulator(changes.replaceGameSimulator);
+    }
+  });
+}
+
+main();
 
 // Clicking any real navbar link (even the current page's) should reveal the page again.
 document.addEventListener(

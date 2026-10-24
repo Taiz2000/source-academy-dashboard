@@ -15,6 +15,8 @@ npm run build        # or: npm run watch
 
 Then in Chrome: `chrome://extensions` → enable **Developer mode** → **Load unpacked** → pick `dist/`.
 After rebuilding, press the extension's reload button and refresh the Source Academy tab.
+The `key` in `src/manifest.json` pins the extension ID (`cnlmdbboohjeooifelmcjddjjmhgakdf`), so
+loading `dist/` again replaces the existing entry instead of adding a new one.
 
 ## How it works
 
