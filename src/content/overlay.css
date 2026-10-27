@@ -175,6 +175,39 @@ thead th {
   border-left: 1px solid #383e47;
 }
 
+/* Column headers: type (in its colour, with a matching top stripe) above the assessment name,
+   which wraps to at most three lines; the full name and code are in the tooltip. */
+.heatmap thead th {
+  height: auto;
+  padding: 4px;
+  vertical-align: bottom;
+}
+
+.heatmap thead th.cell {
+  padding: 6px 4px 4px;
+  box-shadow: inset 0 3px 0 var(--type-color);
+  white-space: normal;
+}
+
+.heatmap .column-type {
+  display: block;
+  color: var(--type-color);
+  font-size: 10px;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.heatmap .column-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
 /* Must match ROW_HEIGHT in HeatmapGrid.tsx. */
 .heatmap tbody th.name,
 .heatmap tbody td.cell {

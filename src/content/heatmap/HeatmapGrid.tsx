@@ -56,9 +56,10 @@ export function HeatmapGrid({ courseId, heatmap }: Props) {
                 key={c.assessmentId}
                 class="cell"
                 title={`${c.number} ${c.title} (${c.type})`}
-                style={{ boxShadow: `inset 0 3px 0 ${typeColor(c.type)}` }}
+                style={{ '--type-color': typeColor(c.type) }}
               >
-                {c.number}
+                <span class="column-type">{c.type}</span>
+                <span class="column-title">{c.title}</span>
               </th>
             ))}
           </tr>
