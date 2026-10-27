@@ -9,7 +9,8 @@
   height: 100%;
   overflow: hidden;
   padding: 12px 16px;
-  background: #1c2127;
+  --panel-bg: #1c2127;
+  background: var(--panel-bg);
   color: #f6f7f9;
   font: 13px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -187,6 +188,16 @@ thead th {
   color: var(--status-color);
 }
 
+/* Score-shaded (colors.ts): --fill runs from MIN_FILL at 0 XP to MAX_FILL at max XP. Mixing
+   with the background in oklab keeps the steps perceptually even. */
+.heatmap td.cell.gradient {
+  background: color-mix(in oklab, var(--status-color) var(--fill), var(--panel-bg));
+}
+
+.heatmap td.cell.dark-text {
+  color: var(--panel-bg);
+}
+
 .heatmap td.cell.empty {
   background: color-mix(in srgb, var(--status-color) 10%, transparent);
   color: color-mix(in srgb, var(--status-color) 70%, transparent);
@@ -221,6 +232,55 @@ thead th {
 
 .heatmap a.cell-body:hover {
   background: color-mix(in srgb, var(--status-color) 20%, transparent);
+}
+
+.heatmap td.cell.gradient a.cell-body:hover {
+  background: none;
+  filter: brightness(1.25);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  font-size: 12px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-ramp-label {
+  color: #abb3bf;
+  font-size: 11px;
+}
+
+/* Same endpoints as the cells; interpolating in oklab reproduces the in-between cell colours. */
+.legend-ramp {
+  width: 72px;
+  height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(
+    in oklab to right,
+    color-mix(in oklab, var(--status-color) var(--min-fill), var(--panel-bg)),
+    color-mix(in oklab, var(--status-color) var(--max-fill), var(--panel-bg))
+  );
+}
+
+/* Matches the fixed cell fill (.heatmap td.cell / td.cell.empty). */
+.legend-swatch {
+  width: 14px;
+  height: 12px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--status-color) 25%, transparent);
+  border: 1px solid color-mix(in srgb, var(--status-color) 50%, transparent);
+}
+
+.legend-swatch.empty {
+  background: color-mix(in srgb, var(--status-color) 10%, transparent);
 }
 
 a {

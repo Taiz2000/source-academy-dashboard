@@ -2,6 +2,7 @@ import { typeColor } from '../assessmentTypes';
 import { PROGRESS_CELL_LABEL, PROGRESS_COLOR, PROGRESS_LABEL, type Submission } from '../model';
 import { SpacerRow } from '../panels/common';
 import { useWindowedRows } from '../useWindowedRows';
+import { cellShade, GRADIENT_PROGRESS, scoreRatio } from './colors';
 import type { Heatmap, HeatmapColumn } from './model';
 
 // Must match the .heatmap row height in overlay.css.
@@ -16,6 +17,7 @@ function cellTitle(column: HeatmapColumn, s: Submission): string {
     `${column.number} ${column.title}`,
     `${PROGRESS_LABEL[s.progress]} · graded ${s.gradedCount}/${s.questionCount}`,
     `XP ${s.xp} / ${s.maxXp}${bonus}`,
+    ...(GRADIENT_PROGRESS.includes(s.progress) ? [`Score ${Math.round(scoreRatio(s) * 100)}%`] : []),
   ].join('\n');
 }
 
@@ -26,7 +28,8 @@ type Props = {
 
 /**
  * Students down the side, assessments across the top. Each cell shows the status above the XP
- * awarded, filled with the grading page's status colour; no submission at all is "Not Attempted".
+ * awarded, filled with the grading page's status colour (shaded by score once graded, see
+ * colors.ts); no submission at all is "Not Attempted".
  */
 export function HeatmapGrid({ courseId, heatmap }: Props) {
   const { students, columns, cells } = heatmap;
@@ -85,12 +88,13 @@ export function HeatmapGrid({ courseId, heatmap }: Props) {
                       </td>
                     );
                   }
+                  const shade = cellShade(s);
                   return (
                     <td
                       key={c.assessmentId}
-                      class="cell"
+                      class={`cell ${shade.className}`}
                       title={cellTitle(c, s)}
-                      style={{ '--status-color': PROGRESS_COLOR[s.progress] }}
+                      style={shade.style}
                     >
                       <a
                         class="cell-body"

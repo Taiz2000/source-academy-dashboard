@@ -4,6 +4,7 @@ import { DEFAULT_SELECTED_TYPES, typeKey, useAssessmentTypes } from '../assessme
 import { useSubmissions } from '../data';
 import { buildHeatmap } from '../heatmap/model';
 import { HeatmapGrid } from '../heatmap/HeatmapGrid';
+import { HeatmapLegend } from '../heatmap/HeatmapLegend';
 import { TypeFilter } from '../heatmap/TypeFilter';
 import { useFilteredRows } from '../useFilteredRows';
 import { FetchStatus } from './common';
@@ -49,6 +50,10 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
             setSelectedTypes(next);
           }}
         />
+      </div>
+
+      <div class="toolbar">
+        <HeatmapLegend />
       </div>
 
       <FetchStatus courseId={courseId} data={data} filtered={filtered} />
