@@ -30,6 +30,31 @@ export const PROGRESS_LABEL: Record<Progress, string> = {
   autograded: 'Autograded',
 };
 
+/** Short labels for heatmap cells, matching the text of SA's ProgressStatusBadge. */
+export const PROGRESS_CELL_LABEL: Record<Progress, string> = {
+  submitted: 'Submitted',
+  graded: 'Graded',
+  published: 'Published',
+  attempted: 'Attempted',
+  attempting: 'Attempting',
+  not_attempted: 'Not Attempted',
+  autograded: 'Autograded',
+};
+
+/**
+ * SA's status badge colours (gradingBadgeColors.ts) as Tailwind v4 background shades:
+ * purple-400, gray-400, red-400 (attempting/attempted), yellow-300, green-400, blue-300.
+ */
+export const PROGRESS_COLOR: Record<Progress, string> = {
+  autograded: '#c27aff',
+  not_attempted: '#99a1af',
+  attempting: '#ff6467',
+  attempted: '#ff6467',
+  submitted: '#ffdf20',
+  graded: '#05df72',
+  published: '#8ec5ff',
+};
+
 export type Member = {
   /** Course registration id. */
   id: number;

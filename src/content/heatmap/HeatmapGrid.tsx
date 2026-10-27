@@ -1,13 +1,14 @@
 import { typeColor } from '../assessmentTypes';
-import { PROGRESS_LABEL, type Submission } from '../model';
+import { PROGRESS_CELL_LABEL, PROGRESS_COLOR, PROGRESS_LABEL, type Submission } from '../model';
 import { SpacerRow } from '../panels/common';
 import { useWindowedRows } from '../useWindowedRows';
 import type { Heatmap, HeatmapColumn } from './model';
 
 // Must match the .heatmap row height in overlay.css.
-const ROW_HEIGHT = 28;
+const ROW_HEIGHT = 40;
 const NAME_WIDTH = 220;
-const CELL_WIDTH = 56;
+// Wide enough for the longest status label, "Not Attempted".
+const CELL_WIDTH = 92;
 
 function cellTitle(column: HeatmapColumn, s: Submission): string {
   const bonus = s.xpBonus ? ` (+${s.xpBonus} bonus)` : '';
@@ -23,7 +24,10 @@ type Props = {
   heatmap: Heatmap;
 };
 
-/** Students down the side, assessments across the top; each cell shows the XP awarded. */
+/**
+ * Students down the side, assessments across the top. Each cell shows the status above the XP
+ * awarded, filled with the grading page's status colour; no submission at all is "Not Attempted".
+ */
 export function HeatmapGrid({ courseId, heatmap }: Props) {
   const { students, columns, cells } = heatmap;
   const { scrollRef, onScroll, start, end, topHeight, bottomHeight } = useWindowedRows(
@@ -67,13 +71,36 @@ export function HeatmapGrid({ courseId, heatmap }: Props) {
                 </th>
                 {columns.map(c => {
                   const s = row?.get(c.assessmentId);
+                  if (!s) {
+                    return (
+                      <td
+                        key={c.assessmentId}
+                        class="cell empty"
+                        title={`${c.number} ${c.title}\nNo submission`}
+                        style={{ '--status-color': PROGRESS_COLOR.not_attempted }}
+                      >
+                        <div class="cell-body">
+                          <span class="status">{PROGRESS_CELL_LABEL.not_attempted}</span>
+                        </div>
+                      </td>
+                    );
+                  }
                   return (
-                    <td key={c.assessmentId} class="cell" title={s && cellTitle(c, s)}>
-                      {s && (
-                        <a href={`/courses/${courseId}/grading/${s.id}`} target="_blank" rel="noopener">
-                          {s.xp}
-                        </a>
-                      )}
+                    <td
+                      key={c.assessmentId}
+                      class="cell"
+                      title={cellTitle(c, s)}
+                      style={{ '--status-color': PROGRESS_COLOR[s.progress] }}
+                    >
+                      <a
+                        class="cell-body"
+                        href={`/courses/${courseId}/grading/${s.id}`}
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        <span class="status">{PROGRESS_CELL_LABEL[s.progress]}</span>
+                        <span class="score">{s.xp}</span>
+                      </a>
                     </td>
                   );
                 })}

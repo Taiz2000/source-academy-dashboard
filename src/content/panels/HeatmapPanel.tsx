@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'preact/hooks';
 
-import { typeKey, useAssessmentTypes } from '../assessmentTypes';
+import { DEFAULT_SELECTED_TYPES, typeKey, useAssessmentTypes } from '../assessmentTypes';
 import { useSubmissions } from '../data';
 import { buildHeatmap } from '../heatmap/model';
 import { HeatmapGrid } from '../heatmap/HeatmapGrid';
@@ -9,22 +9,22 @@ import { useFilteredRows } from '../useFilteredRows';
 import { FetchStatus } from './common';
 
 // Survives switching tabs and reopening the overlay within the page. Stores the types switched
-// *off*, so newly discovered types start out shown.
-let lastExcludedTypes = new Set<string>();
+// *on*, so types other than the defaults start out hidden.
+let lastSelectedTypes = new Set(DEFAULT_SELECTED_TYPES);
 
-/** Proof of concept: your own groups only, XP awarded in each cell. */
+/** Your own groups only; each cell shows the submission's status and XP awarded. */
 export function HeatmapPanel({ courseId }: { courseId: number }) {
   const data = useSubmissions(courseId, true);
   const filtered = useFilteredRows(courseId, data.rows);
   const types = useAssessmentTypes(courseId, data.rows);
-  const [excludedTypes, setExcludedTypes] = useState(lastExcludedTypes);
+  const [selectedTypes, setSelectedTypes] = useState(lastSelectedTypes);
 
   const heatmap = useMemo(
     () =>
       filtered
-        ? buildHeatmap(data.rows, filtered.visible, r => !excludedTypes.has(typeKey(r.assessmentType)))
+        ? buildHeatmap(data.rows, filtered.visible, r => selectedTypes.has(typeKey(r.assessmentType)))
         : null,
-    [data.rows, filtered, excludedTypes],
+    [data.rows, filtered, selectedTypes],
   );
 
   return (
@@ -43,10 +43,10 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
       <div class="toolbar">
         <TypeFilter
           types={types}
-          excluded={excludedTypes}
+          selected={selectedTypes}
           onChange={next => {
-            lastExcludedTypes = next;
-            setExcludedTypes(next);
+            lastSelectedTypes = next;
+            setSelectedTypes(next);
           }}
         />
       </div>

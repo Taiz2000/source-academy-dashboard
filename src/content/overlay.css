@@ -174,14 +174,53 @@ thead th {
   border-left: 1px solid #383e47;
 }
 
-.heatmap td.cell a {
-  display: block;
+/* Must match ROW_HEIGHT in HeatmapGrid.tsx. */
+.heatmap tbody th.name,
+.heatmap tbody td.cell {
+  height: 40px;
+}
+
+/* Filled like SA's status badges: the status colour at 25% behind, full colour for text. */
+.heatmap td.cell {
+  padding: 0;
+  background: color-mix(in srgb, var(--status-color) 25%, transparent);
+  color: var(--status-color);
+}
+
+.heatmap td.cell.empty {
+  background: color-mix(in srgb, var(--status-color) 10%, transparent);
+  color: color-mix(in srgb, var(--status-color) 70%, transparent);
+}
+
+/* Fills the cell (minus its bottom border) so the whole cell is clickable. */
+.heatmap .cell-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 39px;
+  padding: 0 4px;
+  line-height: 1.2;
   color: inherit;
   text-decoration: none;
 }
 
-.heatmap td.cell a:hover {
-  text-decoration: underline;
+.heatmap .cell-body span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heatmap .cell-body .status {
+  font-size: 11px;
+}
+
+.heatmap .cell-body .score {
+  font-weight: 600;
+}
+
+.heatmap a.cell-body:hover {
+  background: color-mix(in srgb, var(--status-color) 20%, transparent);
 }
 
 a {

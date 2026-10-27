@@ -13,6 +13,11 @@ const KNOWN_TYPES: { type: string; color: string }[] = [
 ];
 const DEFAULT_COLOR = '#99a1af';
 
+/** typeKeys shown before the user picks: the hard-coded types; any others start hidden. */
+export const DEFAULT_SELECTED_TYPES: ReadonlySet<string> = new Set(
+  KNOWN_TYPES.map(t => t.type.toLowerCase()),
+);
+
 /** Types are matched case-insensitively, like the grading page's badge lookup. */
 export const typeKey = (type: string) => type.trim().toLowerCase();
 
