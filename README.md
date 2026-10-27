@@ -28,7 +28,11 @@ loading `dist/` again replaces the existing entry instead of adding a new one.
   (`/admin/grading/all_submissions` is admin-only, so it returns 403 for staff.)
 - `src/content/navbar.ts` clones the Grading navbar button and keeps it inserted with a
   `MutationObserver`, since React re-renders the navbar on navigation.
-- `src/content/Overlay.tsx` is the panel, rendered with Preact into a Shadow DOM so styles don't
-  clash with the app. Progress statuses follow the frontend's `backendParamsToProgressStatus`.
+- `src/content/panel.tsx` is a separate bundle (`dist/panel.js`, Preact UI + AG Grid, ~1MB) that
+  the content script `import()`s the first time the dashboard opens, so other SA pages stay light.
+- `src/content/Overlay.tsx` renders into the page's DOM using SA's own markup and classes
+  (ContentDisplay card, Blueprint, Tailwind badge classes, AG Grid with SA's theme parameters), so
+  it looks like the grading page; our own CSS (`panel.css`) is scoped with `sad-`. Progress
+  statuses follow the frontend's `backendParamsToProgressStatus`.
 
 The backend URL lives in `src/content/config.ts`; the allowed origin in `src/manifest.json`.

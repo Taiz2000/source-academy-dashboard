@@ -1,13 +1,12 @@
-import { render } from 'preact';
-
 import { loadSettings, onSettingsChanged } from '../settings';
 import { installNavButton, type NavButton } from './navbar';
-import { Overlay } from './Overlay';
-import overlayCss from './overlay.css';
 import { currentCourseId } from './session';
 
-const sheet = new CSSStyleSheet();
-sheet.replaceSync(overlayCss);
+type PanelModule = typeof import('./panel');
+
+// panel.js (UI + AG Grid) is only fetched the first time the dashboard opens.
+let panelModule: Promise<PanelModule> | null = null;
+const loadPanel = () => (panelModule ??= import(chrome.runtime.getURL('panel.js')) as Promise<PanelModule>);
 
 let host: HTMLDivElement | null = null;
 let openedAtPath: string | null = null;
@@ -16,29 +15,52 @@ function navbarBottom(): number {
   return document.querySelector('.secondary-navbar')?.getBoundingClientRect().bottom ?? 0;
 }
 
-function openOverlay() {
+/** The backdrop SA's grading card sits on: the first non-transparent background behind the page. */
+function pageBackground(): string {
+  for (
+    let el: Element | null = document.querySelector('.Application__main') ?? document.body;
+    el;
+    el = el.parentElement
+  ) {
+    const style = getComputedStyle(el);
+    if (style.backgroundImage !== 'none' || style.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+      return style.background;
+    }
+  }
+  return '#f5f8fa';
+}
+
+async function openOverlay() {
   const courseId = currentCourseId();
   if (courseId === null) return;
 
-  host = document.createElement('div');
+  const el = document.createElement('div');
+  host = el;
   // Covers the page content below the navbar; Blueprint popovers/toasts (z-index 20+) stay on top.
-  host.style.cssText = `position:fixed;left:0;right:0;bottom:0;top:${navbarBottom()}px;z-index:19;`;
-  const root = host.attachShadow({ mode: 'open' });
-  root.adoptedStyleSheets = [sheet];
-  document.body.append(host);
+  // It lives in the page's DOM (not a shadow root) so SA's own stylesheets style the panel.
+  el.className = 'sad-host';
+  el.style.cssText =
+    `position:fixed;left:0;right:0;bottom:0;top:${navbarBottom()}px;z-index:19;overflow:auto;` +
+    `background:${pageBackground()};`;
+  el.textContent = 'Loading dashboard…';
+  document.body.append(el);
   openedAtPath = location.pathname;
-
-  render(<Overlay courseId={courseId} onClose={closeOverlay} />, root);
   nav.setActive(true);
+
+  const panel = await loadPanel();
+  if (host !== el) return; // Closed while panel.js was loading.
+  el.textContent = '';
+  panel.mountPanel(el, courseId, closeOverlay);
 }
 
 function closeOverlay() {
-  if (!host?.shadowRoot) return;
-  render(null, host.shadowRoot);
-  host.remove();
+  if (!host) return;
+  const el = host;
   host = null;
   openedAtPath = null;
   nav.setActive(false);
+  panelModule?.then(panel => panel.unmountPanel(el));
+  el.remove();
 }
 
 let nav: NavButton;

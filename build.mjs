@@ -13,22 +13,36 @@ for (const entry of readdirSync('dist')) rmSync(`dist/${entry}`, { recursive: tr
 copyFileSync('src/manifest.json', 'dist/manifest.json');
 copyFileSync('src/popup/popup.html', 'dist/popup.html');
 
-const ctx = await esbuild.context({
-  entryPoints: { content: 'src/content/index.tsx', popup: 'src/popup/popup.tsx' },
+const common = {
   outdir: 'dist',
   bundle: true,
-  format: 'iife',
   target: 'chrome120',
   jsx: 'automatic',
   jsxImportSource: 'preact',
   loader: { '.css': 'text' },
   minify: !watch,
   logLevel: 'info',
-});
+};
+
+const contexts = await Promise.all([
+  // Classic scripts: the content script runs on every SA page, so it stays small.
+  esbuild.context({
+    ...common,
+    entryPoints: { content: 'src/content/index.tsx', popup: 'src/popup/popup.tsx' },
+    format: 'iife',
+  }),
+  // The overlay (Preact UI + AG Grid, ~1MB) as an ES module the content script imports on first
+  // open. Listed in web_accessible_resources so import() can load it.
+  esbuild.context({
+    ...common,
+    entryPoints: { panel: 'src/content/panel.tsx' },
+    format: 'esm',
+  }),
+]);
 
 if (watch) {
-  await ctx.watch();
+  await Promise.all(contexts.map(ctx => ctx.watch()));
 } else {
-  await ctx.rebuild();
-  await ctx.dispose();
+  await Promise.all(contexts.map(ctx => ctx.rebuild()));
+  await Promise.all(contexts.map(ctx => ctx.dispose()));
 }

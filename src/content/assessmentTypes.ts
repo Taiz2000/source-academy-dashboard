@@ -2,15 +2,20 @@
 // grading page's badge colours, gradingBadgeColors.ts); the rest are discovered and shown in gray.
 import { useEffect, useState } from 'preact/hooks';
 
+import type { BadgeColor } from './badges';
 import type { Submission } from './model';
 import { configuredAssessmentTypes } from './session';
 
-/** Tailwind v4 shades behind SA's badges: indigo-400, emerald-300, sky-300; gray-400 otherwise. */
-const KNOWN_TYPES: { type: string; color: string }[] = [
-  { type: 'Missions', color: '#7c86ff' },
-  { type: 'Quests', color: '#5ee9b5' },
-  { type: 'Paths', color: '#74d4ff' },
+/**
+ * SA's badge colour per type, plus the Tailwind v4 shade behind it (indigo-400, emerald-300,
+ * sky-300; gray-400 otherwise) for accents such as the heatmap's header stripe.
+ */
+const KNOWN_TYPES: { type: string; badge: BadgeColor; color: string }[] = [
+  { type: 'Missions', badge: 'indigo', color: '#7c86ff' },
+  { type: 'Quests', badge: 'emerald', color: '#5ee9b5' },
+  { type: 'Paths', badge: 'sky', color: '#74d4ff' },
 ];
+const DEFAULT_BADGE: BadgeColor = 'gray';
 const DEFAULT_COLOR = '#99a1af';
 
 /** typeKeys shown before the user picks: the hard-coded types; any others start hidden. */
@@ -21,8 +26,14 @@ export const DEFAULT_SELECTED_TYPES: ReadonlySet<string> = new Set(
 /** Types are matched case-insensitively, like the grading page's badge lookup. */
 export const typeKey = (type: string) => type.trim().toLowerCase();
 
+const knownType = (type: string) => KNOWN_TYPES.find(t => typeKey(t.type) === typeKey(type));
+
 export function typeColor(type: string): string {
-  return KNOWN_TYPES.find(t => typeKey(t.type) === typeKey(type))?.color ?? DEFAULT_COLOR;
+  return knownType(type)?.color ?? DEFAULT_COLOR;
+}
+
+export function typeBadgeColor(type: string): BadgeColor {
+  return knownType(type)?.badge ?? DEFAULT_BADGE;
 }
 
 /** Known types first, then the rest in the order given; duplicates (by typeKey) dropped. */

@@ -1,0 +1,190 @@
+/*
+ * The panel renders in the page's DOM inside SA's own ContentDisplay/card markup, so SA's CSS
+ * (Blueprint, Tailwind, AG Grid) does most of the styling. Everything here is scoped with "sad-"
+ * so it cannot leak into the rest of Source Academy.
+ */
+
+/* ContentDisplay is "center-xs", which centres text; SA's grading page only uses flex rows. */
+.sad-root {
+  text-align: left;
+}
+
+.sad-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sad-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-bottom: 1rem;
+}
+
+.sad-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+
+.sad-status {
+  margin: 0;
+  font-size: 12px;
+}
+
+.sad-error {
+  color: #c10007;
+}
+
+/* Blueprint's html-select draws its caret with an icon we don't have, so draw our own. */
+.sad-select {
+  position: relative;
+}
+
+.sad-caret {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 10px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* SA's badges centre themselves with mx-auto, which spreads them out in a flex row. */
+.sad-counts,
+.sad-type-filter,
+.sad-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sad-counts > *,
+.sad-legend > *,
+.sad-chip {
+  margin: 0 !important;
+}
+
+/* Same blue as SA's "Export to CSV" link. */
+.sad-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3b82f6;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.sad-link:hover {
+  text-decoration: underline;
+}
+
+.sad-chip {
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.sad-chip-off {
+  border: 1px dashed #c5cbd3 !important;
+  background: transparent !important;
+  color: #8f99a8 !important;
+}
+
+.sad-legend {
+  column-gap: 1.25rem;
+  font-size: 12px;
+}
+
+.sad-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sad-legend-end {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.sad-legend-ramp {
+  width: 72px;
+  height: 12px;
+  border: 1px solid rgb(0 0 0 / 0.08);
+  border-radius: 2px;
+}
+
+/* Fills the card below the controls; the overlay itself scrolls if the window is short. */
+.sad-grid {
+  height: max(420px, calc(100vh - 360px));
+}
+
+/* Heatmap cells (colours come from colors.ts via cellStyle). */
+.sad-root .ag-cell.sad-heat-cell {
+  padding: 0 !important;
+  border-left: 1px solid rgb(0 0 0 / 0.06);
+}
+
+.sad-root .ag-cell.sad-heat-cell:hover {
+  filter: brightness(0.95);
+}
+
+.sad-heat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  line-height: 1.2;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sad-heat span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sad-heat-status {
+  font-size: 11px;
+}
+
+.sad-heat-score {
+  font-weight: 600;
+}
+
+/* Heatmap column header: type (with its colour stripe) above the name, up to three lines. */
+.sad-col-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  height: 100%;
+  padding-top: 4px;
+  border-top: 3px solid var(--type-color);
+  line-height: 1.25;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.sad-col-type {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.sad-col-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

@@ -1,35 +1,32 @@
-import { PROGRESS_CELL_LABEL, PROGRESS_COLOR, type Progress } from '../model';
-import { GRADIENT_PROGRESS, MAX_FILL, MIN_FILL } from './colors';
+import { Badge, PROGRESS_BADGE_COLOR } from '../badges';
+import { PROGRESS_CELL_LABEL, type Progress } from '../model';
+import { fillPercent, GRADIENT_PROGRESS, heatColor } from './colors';
 
 const FIXED_PROGRESS: Progress[] = ['submitted', 'attempted', 'not_attempted'];
 
-/** Score ramps for the shaded statuses, then swatches for the fixed ones. */
+/** Score ramps for the shaded statuses (same colours as the cells), then SA badges for the rest. */
 export function HeatmapLegend() {
   return (
-    <div class="legend">
-      {GRADIENT_PROGRESS.map(p => (
-        <span key={p} class="legend-item">
-          {PROGRESS_CELL_LABEL[p]}
-          <span class="legend-ramp-label">0%</span>
-          <span
-            class="legend-ramp"
-            style={{
-              '--status-color': PROGRESS_COLOR[p],
-              '--min-fill': `${MIN_FILL}%`,
-              '--max-fill': `${MAX_FILL}%`,
-            }}
-          />
-          <span class="legend-ramp-label">100%</span>
-        </span>
-      ))}
+    <div class="sad-legend">
+      {GRADIENT_PROGRESS.map(p => {
+        const color = heatColor(p)!;
+        const at = (ratio: number) => `color-mix(in oklab, ${color} ${fillPercent(ratio)}%, #fff)`;
+        return (
+          <span key={p} class="sad-legend-item">
+            {PROGRESS_CELL_LABEL[p]}
+            <span class="sad-legend-end">0%</span>
+            <span
+              class="sad-legend-ramp"
+              style={{ background: `linear-gradient(in oklab to right, ${at(0)}, ${at(1)})` }}
+            />
+            <span class="sad-legend-end">100%</span>
+          </span>
+        );
+      })}
       {FIXED_PROGRESS.map(p => (
-        <span key={p} class="legend-item">
-          <span
-            class={p === 'not_attempted' ? 'legend-swatch empty' : 'legend-swatch'}
-            style={{ '--status-color': PROGRESS_COLOR[p] }}
-          />
+        <Badge key={p} color={PROGRESS_BADGE_COLOR[p]}>
           {p === 'attempted' ? 'Attempting / Attempted' : PROGRESS_CELL_LABEL[p]}
-        </span>
+        </Badge>
       ))}
     </div>
   );

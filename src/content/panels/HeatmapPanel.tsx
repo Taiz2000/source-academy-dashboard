@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'preact/hooks';
 
 import { DEFAULT_SELECTED_TYPES, typeKey, useAssessmentTypes } from '../assessmentTypes';
+import { bp } from '../blueprint';
 import { useSubmissions } from '../data';
 import { buildHeatmap } from '../heatmap/model';
 import { HeatmapGrid } from '../heatmap/HeatmapGrid';
 import { HeatmapLegend } from '../heatmap/HeatmapLegend';
 import { TypeFilter } from '../heatmap/TypeFilter';
 import { useFilteredRows } from '../useFilteredRows';
-import { FetchStatus } from './common';
+import { FetchStatus, MinimalButton } from './common';
 
 // Survives switching tabs and reopening the overlay within the page. Stores the types switched
 // *on*, so types other than the defaults start out hidden.
@@ -29,19 +30,22 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
   );
 
   return (
-    <div class="panel-body">
-      <div class="toolbar">
-        <span>Your groups</span>
-        <button onClick={data.reload} disabled={data.loading}>
-          {data.loading ? 'Loading…' : 'Refresh'}
-        </button>
+    <div class="sad-panel">
+      <div class="sad-toolbar">
+        <span>Viewing submissions from your groups</span>
+        <MinimalButton onClick={data.reload} disabled={data.loading} title="Refetch from the server">
+          {data.loading ? 'Loading…' : '↻ Refresh'}
+        </MinimalButton>
         {heatmap && data.result && (
-          <span class="muted">
+          <span class={bp('text-muted')}>
             {heatmap.students.length} students × {heatmap.columns.length} assessments
           </span>
         )}
       </div>
-      <div class="toolbar">
+
+      <FetchStatus courseId={courseId} data={data} filtered={filtered} />
+
+      <div class="sad-toolbar">
         <TypeFilter
           types={types}
           selected={selectedTypes}
@@ -51,12 +55,9 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
           }}
         />
       </div>
-
-      <div class="toolbar">
+      <div class="sad-toolbar">
         <HeatmapLegend />
       </div>
-
-      <FetchStatus courseId={courseId} data={data} filtered={filtered} />
 
       {heatmap && data.result && <HeatmapGrid courseId={courseId} heatmap={heatmap} />}
     </div>

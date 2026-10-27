@@ -25,6 +25,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "ag-grid-community": "^36.2.0",
     "lz-string": "^1.5.0",
     "preact": "^10.29.8"
   },
