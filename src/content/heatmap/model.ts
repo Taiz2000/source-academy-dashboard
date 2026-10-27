@@ -37,9 +37,15 @@ export function orderColumns(
 
 /**
  * `allRows` is the full fetch in server order and only decides column order, so hiding rows never
- * reshuffles the columns that remain. `visibleRows` (after the popup's hide options) fills the grid.
+ * reshuffles the columns that remain. `visibleRows` (after the popup's hide options) decides which
+ * students get a row; only those passing `includeRow` (e.g. the type filter) become columns and
+ * cells, so filtering never makes students disappear.
  */
-export function buildHeatmap(allRows: Submission[], visibleRows: Submission[]): Heatmap {
+export function buildHeatmap(
+  allRows: Submission[],
+  visibleRows: Submission[],
+  includeRow: (row: Submission) => boolean = () => true,
+): Heatmap {
   const firstSeen = new Map<number, number>();
   allRows.forEach((r, i) => {
     if (!firstSeen.has(r.assessmentId)) firstSeen.set(r.assessmentId, i);
@@ -50,6 +56,11 @@ export function buildHeatmap(allRows: Submission[], visibleRows: Submission[]): 
   const cells = new Map<number, Map<number, Submission>>();
 
   for (const r of visibleRows) {
+    for (const m of r.members) {
+      if (!students.has(m.id)) students.set(m.id, m);
+    }
+    if (!includeRow(r)) continue;
+
     if (!columns.has(r.assessmentId)) {
       columns.set(r.assessmentId, {
         assessmentId: r.assessmentId,
@@ -60,7 +71,6 @@ export function buildHeatmap(allRows: Submission[], visibleRows: Submission[]): 
       });
     }
     for (const m of r.members) {
-      if (!students.has(m.id)) students.set(m.id, m);
       let row = cells.get(m.id);
       if (!row) cells.set(m.id, (row = new Map()));
       row.set(r.assessmentId, r);

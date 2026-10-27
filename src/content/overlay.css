@@ -139,6 +139,35 @@ thead th {
   font-weight: bold;
 }
 
+.type-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Styled like SA's grading badges: the type colour at 25% behind, full colour for text/border. */
+.chip {
+  border: 1px dashed #5f6b7c;
+  border-radius: 999px;
+  padding: 2px 10px;
+  background: transparent;
+  color: #abb3bf;
+}
+
+.chip.selected {
+  border: 1px solid var(--chip-color);
+  background: color-mix(in srgb, var(--chip-color) 25%, transparent);
+  color: var(--chip-color);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #8abbff;
+}
+
 .heatmap .cell {
   padding: 0 2px;
   text-align: center;

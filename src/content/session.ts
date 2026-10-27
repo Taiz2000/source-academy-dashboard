@@ -12,6 +12,8 @@ type StoredSession = {
   courseId?: number;
   courseShortName?: string;
   role?: string;
+  /** The course's assessment types, in its configured order (AssessmentConfiguration). */
+  assessmentConfigurations?: { type: string }[];
 };
 
 type Tokens = { accessToken: string; refreshToken: string };
@@ -48,6 +50,13 @@ export function currentCourseId(): number | null {
 export function ownCourseRegId(courseId: number): number | null {
   const session = readStoredSession();
   return session?.courseId === courseId ? (session.courseRegId ?? null) : null;
+}
+
+/** Assessment types configured for `courseId`, or [] if the stored session is for another course. */
+export function configuredAssessmentTypes(courseId: number): string[] {
+  const session = readStoredSession();
+  if (session?.courseId !== courseId) return [];
+  return (session.assessmentConfigurations ?? []).map(c => c.type).filter(Boolean);
 }
 
 // Tokens we refreshed ourselves, valid until the app stores a newer access token of its own.

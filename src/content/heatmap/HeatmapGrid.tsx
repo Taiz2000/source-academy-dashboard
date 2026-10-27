@@ -1,3 +1,4 @@
+import { typeColor } from '../assessmentTypes';
 import { PROGRESS_LABEL, type Submission } from '../model';
 import { SpacerRow } from '../panels/common';
 import { useWindowedRows } from '../useWindowedRows';
@@ -44,7 +45,12 @@ export function HeatmapGrid({ courseId, heatmap }: Props) {
           <tr>
             <th class="name">Student</th>
             {columns.map(c => (
-              <th key={c.assessmentId} class="cell" title={`${c.number} ${c.title} (${c.type})`}>
+              <th
+                key={c.assessmentId}
+                class="cell"
+                title={`${c.number} ${c.title} (${c.type})`}
+                style={{ boxShadow: `inset 0 3px 0 ${typeColor(c.type)}` }}
+              >
                 {c.number}
               </th>
             ))}
