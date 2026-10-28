@@ -119,6 +119,7 @@ function columns(courseId: number, heatmap: Heatmap): ColDef<Member>[] {
       field: 'name',
       pinned: 'left',
       width: NAME_WIDTH,
+      cellClass: 'text-left',
       filter: true,
       suppressMovable: true,
       tooltipValueGetter: p => (p.data ? `${p.data.name} (${p.data.username}, ${p.data.groupName})` : ''),

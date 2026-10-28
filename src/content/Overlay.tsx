@@ -53,8 +53,8 @@ export function Overlay({ courseId, onClose }: Props) {
                   ))}
                 </div>
               </div>
-              <MinimalButton onClick={onClose} title="Back to Source Academy">
-                ✕ Close
+              <MinimalButton onClick={onClose} title="Back to Source Academy" icon="cross">
+                Close
               </MinimalButton>
             </div>
 

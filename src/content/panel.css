@@ -4,11 +4,10 @@
  * so it cannot leak into the rest of Source Academy.
  */
 
-/* ContentDisplay is "center-xs", which centres text; SA's grading page only uses flex rows. */
-.sad-root {
-  text-align: left;
-}
-
+/*
+ * ContentDisplay is "center-xs", which centres text. SA's grading page keeps that (columns without
+ * "text-left" are centred), so we do too and left-align only our own text blocks.
+ */
 .sad-header {
   display: flex;
   align-items: center;
@@ -32,32 +31,50 @@
 }
 
 .sad-status {
-  margin: 0;
+  margin: 0.5rem 0 0;
   font-size: 12px;
+  text-align: left;
+}
+
+/* The heatmap panel spaces its rows with a flex gap instead. */
+.sad-panel .sad-status {
+  margin: 0;
 }
 
 .sad-error {
   color: #c10007;
 }
 
-/* Blueprint's html-select draws its caret with an icon we don't have, so draw our own. */
-.sad-select {
+/* SimpleDropdown's menu, placed below its button where Blueprint's Position.BOTTOM would put it. */
+.sad-dropdown {
   position: relative;
+  display: inline-flex;
 }
 
-.sad-caret {
+.sad-root .sad-dropdown-popover {
   position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-  font-size: 10px;
-  opacity: 0.7;
-  pointer-events: none;
+  top: calc(100% + 4px);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 20;
+  min-width: max-content;
+  text-align: left;
+}
+
+/* SA's full-card loading state. */
+.sad-loading {
+  padding: 4rem 0;
+}
+
+/* SA only reveals a header's sort button on hover; keep it visible while the column is sorted. */
+.sad-root .sad-sorted .sad-header-actions {
+  width: fit-content;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* SA's badges centre themselves with mx-auto, which spreads them out in a flex row. */
-.sad-counts,
-.sad-type-filter,
+.sad-chips,
 .sad-legend {
   display: flex;
   flex-wrap: wrap;
@@ -65,7 +82,6 @@
   gap: 0.4rem;
 }
 
-.sad-counts > *,
 .sad-legend > *,
 .sad-chip {
   margin: 0 !important;

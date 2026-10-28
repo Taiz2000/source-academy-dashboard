@@ -8,7 +8,7 @@ import { HeatmapGrid } from '../heatmap/HeatmapGrid';
 import { HeatmapLegend } from '../heatmap/HeatmapLegend';
 import { TypeFilter } from '../heatmap/TypeFilter';
 import { useFilteredRows } from '../useFilteredRows';
-import { FetchStatus, MinimalButton } from './common';
+import { FetchStatus, RefreshButton } from './common';
 
 // Survives switching tabs and reopening the overlay within the page. Stores the types switched
 // *on*, so types other than the defaults start out hidden.
@@ -33,9 +33,7 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
     <div class="sad-panel">
       <div class="sad-toolbar">
         <span>Viewing submissions from your groups</span>
-        <MinimalButton onClick={data.reload} disabled={data.loading} title="Refetch from the server">
-          {data.loading ? 'Loading…' : '↻ Refresh'}
-        </MinimalButton>
+        <RefreshButton onClick={data.reload} disabled={data.loading} />
         {heatmap && data.result && (
           <span class={bp('text-muted')}>
             {heatmap.students.length} students × {heatmap.columns.length} assessments

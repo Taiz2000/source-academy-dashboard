@@ -25,10 +25,12 @@ type Props<T> = {
   options: GridOptions<T>;
   rowData: T[];
   columnDefs: ColDef<T>[];
+  /** Shows the grid's loading overlay over the current rows. */
+  loading?: boolean;
   class?: string;
 };
 
-export function AgGrid<T>({ options, rowData, columnDefs, class: className }: Props<T>) {
+export function AgGrid<T>({ options, rowData, columnDefs, loading = false, class: className }: Props<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<GridApi<T> | null>(null);
 
@@ -38,12 +40,13 @@ export function AgGrid<T>({ options, rowData, columnDefs, class: className }: Pr
       ...options,
       rowData,
       columnDefs,
+      loading,
     });
     return () => {
       apiRef.current?.destroy();
       apiRef.current = null;
     };
-    // Created once; rowData and columnDefs are pushed in by the effects below.
+    // Created once; rowData, columnDefs and loading are pushed in by the effects below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -54,6 +57,10 @@ export function AgGrid<T>({ options, rowData, columnDefs, class: className }: Pr
   useEffect(() => {
     apiRef.current?.setGridOption('rowData', rowData);
   }, [rowData]);
+
+  useEffect(() => {
+    apiRef.current?.setGridOption('loading', loading);
+  }, [loading]);
 
   return <div ref={containerRef} class={className} />;
 }

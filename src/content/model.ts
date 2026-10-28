@@ -121,6 +121,12 @@ export function normalize(s: RawSubmission): Submission {
   };
 }
 
+/**
+ * SA's "Viewing unpublished submissions": submitted, manually graded and not yet published
+ * (unpublishedToBackendParams in the frontend's GradingUtils.ts), i.e. Submitted or Graded.
+ */
+export const isUnpublished = (s: Submission) => s.progress === 'submitted' || s.progress === 'graded';
+
 export type ProgressCounts = Record<Progress, number>;
 
 export const emptyCounts = (): ProgressCounts => ({
