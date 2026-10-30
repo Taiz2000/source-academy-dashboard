@@ -61,6 +61,12 @@
   text-align: left;
 }
 
+/* Long menus (e.g. every group in the course) scroll. */
+.sad-root .sad-dropdown-popover [role='menu'] {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
 /* SA's full-card loading state. */
 .sad-loading {
   padding: 4rem 0;

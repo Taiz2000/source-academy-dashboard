@@ -65,19 +65,22 @@ function load(entry: Entry, courseId: number, group: boolean) {
     });
 }
 
-/** Submissions for the course, fetched on first use and shared until `reload()`. */
-export function useSubmissions(courseId: number, group: boolean) {
+/**
+ * Submissions for the course, fetched on first use and shared until `reload()`. With `enabled`
+ * false nothing is fetched, but data another panel already fetched is still returned.
+ */
+export function useSubmissions(courseId: number, group: boolean, enabled = true) {
   const entry = entryFor(courseId, group);
   const [, rerender] = useState(0);
 
   useEffect(() => {
     const listener = () => rerender(n => n + 1);
     entry.listeners.add(listener);
-    if (!entry.state.result && !entry.state.loading) load(entry, courseId, group);
+    if (enabled && !entry.state.result && !entry.state.loading) load(entry, courseId, group);
     return () => {
       entry.listeners.delete(listener);
     };
-  }, [entry]);
+  }, [entry, enabled]);
 
   // Read the entry directly so switching (course, group) never shows the previous entry's data.
   return { ...entry.state, reload: () => load(entry, courseId, group) };

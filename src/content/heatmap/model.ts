@@ -39,12 +39,14 @@ export function orderColumns(
  * `allRows` is the full fetch in server order and only decides column order, so hiding rows never
  * reshuffles the columns that remain. `visibleRows` (after the popup's hide options) decides which
  * students get a row; only those passing `includeRow` (e.g. the type filter) become columns and
- * cells, so filtering never makes students disappear.
+ * cells, so filtering never makes students disappear. `includeStudent` (e.g. one group) limits the
+ * students; a team row then only fills the cells of its members who pass.
  */
 export function buildHeatmap(
   allRows: Submission[],
   visibleRows: Submission[],
   includeRow: (row: Submission) => boolean = () => true,
+  includeStudent: (member: Member) => boolean = () => true,
 ): Heatmap {
   const firstSeen = new Map<number, number>();
   allRows.forEach((r, i) => {
@@ -56,7 +58,9 @@ export function buildHeatmap(
   const cells = new Map<number, Map<number, Submission>>();
 
   for (const r of visibleRows) {
-    for (const m of r.members) {
+    const members = r.members.filter(includeStudent);
+    if (members.length === 0) continue;
+    for (const m of members) {
       if (!students.has(m.id)) students.set(m.id, m);
     }
     if (!includeRow(r)) continue;
@@ -70,7 +74,7 @@ export function buildHeatmap(
         maxXp: r.maxXp,
       });
     }
-    for (const m of r.members) {
+    for (const m of members) {
       let row = cells.get(m.id);
       if (!row) cells.set(m.id, (row = new Map()));
       row.set(r.assessmentId, r);
