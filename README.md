@@ -36,7 +36,8 @@ Everything stays in your browser; nothing is sent anywhere except Source Academy
   groups" refreshes just those. A page shows the saved data at once; "my groups" and "all groups"
   always refetch in the background, a single group only if its data is over an hour old. This
   includes students' names, usernames, groups, progress and XP (~25MB for a 50k-row course), kept
-  until replaced or cleared, so use **Clear cached data** on shared computers. Also cached: group
+  until replaced, cleared, or a week old (deleted when a page next opens), so use **Clear cached
+  data** on shared computers. Also cached: group
   names (with tutors, from the grading summary) and assessment types, for the filter menus.
 
 ## Build & load

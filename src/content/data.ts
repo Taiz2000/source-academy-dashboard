@@ -16,6 +16,8 @@ import type { RawSubmission } from './types';
 
 /** One group's saved data is shown without refetching while younger than this. */
 const GROUP_FRESH_MS = 60 * 60 * 1000;
+/** Saved data older than this is deleted when a page opens, rather than shown. */
+const MAX_SAVED_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const NO_GROUP = '-';
 const TEAM = '\u0000team';
@@ -95,12 +97,50 @@ function notify(store: Store) {
   store.listeners.forEach(listener => listener());
 }
 
+// Storage writes run one after another, so an older write never lands after a newer one.
+let saving = Promise.resolve();
+
+/**
+ * Deletes saved pieces older than MAX_SAVED_AGE_MS (whoever they belong to), and returns what is
+ * left; null when nothing is.
+ */
+async function pruneSaved(index: SavedIndex): Promise<SavedIndex | null> {
+  const cutoff = Date.now() - MAX_SAVED_AGE_MS;
+  const stale = Object.keys(index.pieces).filter(key => index.pieces[key] < cutoff);
+  const pruned: SavedIndex = {
+    ...index,
+    pieces: Object.fromEntries(Object.entries(index.pieces).filter(([, at]) => at >= cutoff)),
+    // All groups is only complete with every piece, and "my groups" with its own rows.
+    allFetchedAt: index.allFetchedAt !== null && index.allFetchedAt < cutoff ? null : index.allFetchedAt,
+    mine: index.mine && index.mine.fetchedAt < cutoff ? null : index.mine,
+  };
+  const empty =
+    Object.keys(pruned.pieces).length === 0 && pruned.allFetchedAt === null && pruned.mine === null;
+  if (empty) {
+    await clearSavedSubmissions();
+    return null;
+  }
+  if (stale.length > 0 || pruned.allFetchedAt !== index.allFetchedAt || pruned.mine !== index.mine) {
+    await chrome.storage.local.remove(stale.map(submissionsPieceKey));
+    await chrome.storage.local.set({ [SUBMISSIONS_INDEX_KEY]: pruned });
+  }
+  return pruned;
+}
+
 async function readIndex(courseId: number): Promise<SavedIndex | null> {
   const userId = currentUserId();
-  try {
+  const read = saving.then(async () => {
     const index = (await chrome.storage.local.get(SUBMISSIONS_INDEX_KEY))[SUBMISSIONS_INDEX_KEY] as
       | SavedIndex
       | undefined;
+    return index ? pruneSaved(index) : null;
+  });
+  saving = read.then(
+    () => {},
+    () => {},
+  );
+  try {
+    const index = await read;
     // Another course's or user's data is never shown; it is replaced on the next save.
     return index && index.courseId === courseId && index.userId === userId ? index : null;
   } catch {
@@ -245,9 +285,6 @@ function view(store: Store, scope: Scope, state: ScopeState): DataState {
   state.view = { version: store.version, state: result };
   return result;
 }
-
-// Saves run one after another, so an older write never lands after a newer one.
-let saving = Promise.resolve();
 
 /** Writes `changed` pieces (and drops `removed` ones) plus the index for this course and user. */
 function save(store: Store, changed: Iterable<string>, removed: Iterable<string> = []) {
