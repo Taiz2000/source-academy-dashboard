@@ -111,7 +111,7 @@ function Popup() {
   if (!settings) return null;
   return (
     <>
-      <h1>Grading Dashboard</h1>
+      <h1>Source Academy Grading Dashboard</h1>
       <Toggle settings={settings} name="openInNewTab" label="Open submissions in a new tab" />
       <Toggle
         settings={settings}
