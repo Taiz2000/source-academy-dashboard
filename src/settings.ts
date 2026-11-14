@@ -5,6 +5,8 @@ export type Settings = {
   openInNewTab: boolean;
   /** Show our submissions table instead of SA's on the grading page's Submissions tab. */
   useAltSubmissions: boolean;
+  /** Offer "Publish all" on any group's heatmap, not just your own groups. */
+  allowPublishAnywhere: boolean;
   /** Hide submissions made by the logged-in user. */
   hideOwnSubmissions: boolean;
   /** Hide submissions made by any tutor (group leader) and by the logged-in user. */
@@ -21,6 +23,7 @@ export const DEFAULT_HIDDEN_GROUPS = ['AWOL', 'NOTINCS1101S'];
 export const DEFAULT_SETTINGS: Settings = {
   openInNewTab: true,
   useAltSubmissions: false,
+  allowPublishAnywhere: false,
   hideOwnSubmissions: false,
   hideTutorSubmissions: false,
   hideGroups: false,

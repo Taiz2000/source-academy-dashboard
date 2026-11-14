@@ -7,8 +7,9 @@ import { useCourseGroups } from '../groups';
 import { buildHeatmap } from '../heatmap/model';
 import { HeatmapGrid } from '../heatmap/HeatmapGrid';
 import { HeatmapLegend } from '../heatmap/HeatmapLegend';
+import { PublishAll } from '../heatmap/PublishAll';
 import { TypeFilter } from '../heatmap/TypeFilter';
-import type { Member } from '../model';
+import type { Member, Submission } from '../model';
 import { groupKey } from '../../settings';
 import { useFilteredRows } from '../useFilteredRows';
 import { useSettings } from '../../useSettings';
@@ -53,6 +54,31 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
       inGroup,
     );
   }, [data.rows, filtered, selectedTypes, group]);
+
+  // "Publish all" targets: Graded cells of the students the grid shows, once per submission (a team
+  // submission fills a cell for each member).
+  const [displayedStudents, setDisplayedStudents] = useState<Set<number> | null>(null);
+  const [highlight, setHighlight] = useState(false);
+  const publishTargets = useMemo(() => {
+    if (!heatmap) return [];
+    const ids = new Set<number>();
+    for (const student of heatmap.students) {
+      if (displayedStudents && !displayedStudents.has(student.id)) continue;
+      const row = heatmap.cells.get(student.id);
+      for (const column of heatmap.columns) {
+        const s: Submission | undefined = row?.get(column.assessmentId);
+        if (s?.progress === 'graded') ids.add(s.id);
+      }
+    }
+    return [...ids];
+  }, [heatmap, displayedStudents]);
+  const publishBlocked = group !== null && !settings?.allowPublishAnywhere;
+  const publishDisabled = publishBlocked
+    ? 'Publish all is disabled for groups other than your own; you can override this in the options.'
+    : // A saved copy may be out of date, and publishing again re-notifies students.
+        data.fromCache && data.loading
+        ? 'Waiting for the latest data…'
+        : null;
 
   const groupOptions = useMemo(() => {
     const hidden = settings?.hideGroups ? new Set(settings.hiddenGroups.map(groupKey)) : null;
@@ -105,7 +131,8 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
         <p class="sad-status sad-error">Couldn't fetch all groups: {all.error}</p>
       )}
 
-      <div class="sad-toolbar">
+      {/* Like SA's filter row: filters on the left, the mode pill on the right. */}
+      <div class="sad-toolbar" style={{ justifyContent: 'space-between' }}>
         <TypeFilter
           types={types}
           selected={selectedTypes}
@@ -114,12 +141,29 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
             setSelectedTypes(next);
           }}
         />
+        {heatmap && data.result && (
+          <PublishAll
+            courseId={courseId}
+            targetIds={publishTargets}
+            disabledReason={publishDisabled}
+            blocked={publishBlocked}
+            onHighlight={setHighlight}
+            reload={data.reload}
+          />
+        )}
       </div>
       <div class="sad-toolbar">
         <HeatmapLegend />
       </div>
 
-      {heatmap && data.result && <HeatmapGrid courseId={courseId} heatmap={heatmap} />}
+      {heatmap && data.result && (
+        <HeatmapGrid
+          courseId={courseId}
+          heatmap={heatmap}
+          highlightGraded={highlight}
+          onDisplayedStudents={setDisplayedStudents}
+        />
+      )}
     </div>
   );
 }

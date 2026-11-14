@@ -92,23 +92,43 @@ async function refreshTokens(refreshToken: string): Promise<Tokens> {
   return { accessToken: body.access_token, refreshToken: body.refresh_token };
 }
 
-const get = (path: string, accessToken: string) =>
+type Method = 'GET' | 'POST';
+
+const send = (method: Method, path: string, accessToken: string) =>
   fetch(`${BACKEND_URL}/v2/${path}`, {
-    headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
+    method,
+    // POSTs here answer in plain text ("OK"), so like SA they don't ask for JSON.
+    headers: {
+      ...(method === 'GET' ? { Accept: 'application/json' } : {}),
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 
-/** GET {BACKEND_URL}/v2/{path} as the logged-in user, refreshing the access token once on 401. */
-export async function authedGet(path: string): Promise<Response> {
+// One refresh shared by concurrent requests that all hit 401.
+let refreshing: Promise<Tokens> | null = null;
+
+/** {method} {BACKEND_URL}/v2/{path} as the logged-in user, refreshing the access token once on 401. */
+async function authedFetch(method: Method, path: string): Promise<Response> {
   const { stored, tokens } = currentTokens();
-  let resp = await get(path, tokens.accessToken);
+  let resp = await send(method, path, tokens.accessToken);
   if (resp.status === 401) {
-    const fresh = await refreshTokens(tokens.refreshToken);
-    refreshed = { replacedAccessToken: stored, tokens: fresh };
-    resp = await get(path, fresh.accessToken);
+    refreshing ??= refreshTokens(tokens.refreshToken)
+      .then(fresh => {
+        refreshed = { replacedAccessToken: stored, tokens: fresh };
+        return fresh;
+      })
+      .finally(() => {
+        refreshing = null;
+      });
+    resp = await send(method, path, (await refreshing).accessToken);
   }
   if (!resp.ok) {
-    const text = await resp.text().catch(() => '');
-    throw new HttpError(resp.status, `${resp.status} ${resp.statusText} ${text}`.trim());
+    // The backend explains rejections in the body, e.g. "Some answers are not graded".
+    const text = (await resp.text().catch(() => '')).trim();
+    throw new HttpError(resp.status, text || `${resp.status} ${resp.statusText}`);
   }
   return resp;
 }
+
+export const authedGet = (path: string) => authedFetch('GET', path);
+export const authedPost = (path: string) => authedFetch('POST', path);

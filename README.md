@@ -14,6 +14,10 @@ Click the extension's toolbar icon:
 - **Use alternative Submissions menu (work in progress)** (off by default): the grading page's
   Submissions tab shows this extension's table (every row at once, status chips, hide options)
   instead of SA's.
+- **Allow publish all anywhere (may result in errors)** (off by default): the heatmap's **Publish
+  all graded submissions** button is otherwise only enabled on your own groups. It publishes each
+  highlighted Graded submission with the same request as SA's per-row Publish button (the backend
+  only lets tutors publish their own students'), and stops after 5 errors.
 - **Hide your own submissions** / **Hide all tutors' submissions** / **Hide groups**: filter
   rows out of every view. Tutors are recognised as group leaders in the fetched data, plus you.
 - **Clear cached data**: see below.

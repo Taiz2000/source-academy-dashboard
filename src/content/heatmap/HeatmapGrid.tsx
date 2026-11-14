@@ -5,7 +5,7 @@ import type {
   IHeaderComp,
   IHeaderParams,
 } from 'ag-grid-community';
-import { useMemo } from 'preact/hooks';
+import { useMemo, useRef } from 'preact/hooks';
 
 import { typeBadgeColor } from '../assessmentTypes';
 import { BADGE_COLOR } from '../badges';
@@ -148,7 +148,11 @@ function columns(courseId: number, heatmap: Heatmap): ColDef<Member>[] {
         suppressMovable: true,
         valueGetter: p => (p.data ? heatmap.cells.get(p.data.id)?.get(c.assessmentId) : undefined),
         comparator: (a: Submission | undefined, b: Submission | undefined) => sortKey(a) - sortKey(b),
-        cellClass: 'sad-heat-cell',
+        // Graded cells are what "Publish all" would publish; highlighted while it's confirming.
+        cellClass: p =>
+          (p.value as Submission | undefined)?.progress === 'graded'
+            ? 'sad-heat-cell sad-publish-target'
+            : 'sad-heat-cell',
         cellStyle: p => cellColors(p.value as Submission | undefined),
         cellRenderer: renderCell,
         tooltipValueGetter: p => cellTitle(c, p.value as Submission | undefined),
@@ -160,10 +164,16 @@ function columns(courseId: number, heatmap: Heatmap): ColDef<Member>[] {
 type Props = {
   courseId: number;
   heatmap: Heatmap;
+  /** Pulse the borders of Graded cells (the "Publish all" targets). */
+  highlightGraded: boolean;
+  /** Called with the ids of the students left after the grid's filters, whenever they change. */
+  onDisplayedStudents: (ids: Set<number>) => void;
 };
 
 /** Students down the side, assessments across the top; see colors.ts for how cells are shaded. */
-export function HeatmapGrid({ courseId, heatmap }: Props) {
+export function HeatmapGrid({ courseId, heatmap, highlightGraded, onDisplayedStudents }: Props) {
+  const onDisplayedRef = useRef(onDisplayedStudents);
+  onDisplayedRef.current = onDisplayedStudents;
   const columnDefs = useMemo(() => columns(courseId, heatmap), [courseId, heatmap]);
   const options = useMemo<GridOptions<Member>>(
     () => ({
@@ -173,11 +183,19 @@ export function HeatmapGrid({ courseId, heatmap }: Props) {
       headerHeight: HEADER_HEIGHT,
       enableBrowserTooltips: true,
       suppressCellFocus: true,
+      onModelUpdated: e => {
+        const ids = new Set<number>();
+        e.api.forEachNodeAfterFilter(node => node.data && ids.add(node.data.id));
+        onDisplayedRef.current(ids);
+      },
     }),
     [],
   );
 
+  // The highlight is a class on this wrapper, so toggling it never redraws the grid.
   return (
-    <AgGrid class="sad-grid" options={options} rowData={heatmap.students} columnDefs={columnDefs} />
+    <div class={highlightGraded ? 'sad-publish-preview' : undefined}>
+      <AgGrid class="sad-grid" options={options} rowData={heatmap.students} columnDefs={columnDefs} />
+    </div>
   );
 }

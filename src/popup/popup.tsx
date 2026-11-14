@@ -118,6 +118,11 @@ function Popup() {
         name="useAltSubmissions"
         label="Use alternative Submissions menu (work in progress)"
       />
+      <Toggle
+        settings={settings}
+        name="allowPublishAnywhere"
+        label="Allow publish all anywhere (may result in errors)"
+      />
       <Toggle settings={settings} name="hideOwnSubmissions" label="Hide your own submissions" />
       <Toggle
         settings={settings}

@@ -122,6 +122,37 @@ async function start(entry: Entry, courseId: number, group: boolean) {
 }
 
 /**
+ * Marks submissions as published in every fetch of the course held by this page (both scopes), as
+ * the backend has just confirmed it; no refetch needed. The saved copies are updated by
+ * `saveCourseToCache`, separately, as each write stores the whole fetch.
+ */
+export function markPublished(courseId: number, ids: ReadonlySet<number>) {
+  for (const [key, entry] of entries) {
+    if (!key.startsWith(`${courseId}:`) || !entry.state.result) continue;
+    const { result } = entry.state;
+    update(entry, {
+      result: {
+        ...result,
+        response: {
+          ...result.response,
+          data: result.response.data.map(s => (ids.has(s.id) ? { ...s, isGradingPublished: true } : s)),
+        },
+      },
+      rows: entry.state.rows.map(r => (ids.has(r.id) ? { ...r, progress: 'published' } : r)),
+    });
+  }
+}
+
+/** Saves this page's fetches of the course (e.g. after `markPublished`) as the cached copies. */
+export function saveCourseToCache(courseId: number) {
+  for (const [key, entry] of entries) {
+    if (key.startsWith(`${courseId}:`) && entry.state.result) {
+      writeCache(courseId, key.endsWith(':true'), entry.state.result);
+    }
+  }
+}
+
+/**
  * Submissions for the course, fetched on first use and shared until `reload()`. With `enabled`
  * false nothing is fetched, but data another panel already fetched is still returned.
  */
