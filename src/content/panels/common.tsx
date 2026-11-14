@@ -116,33 +116,6 @@ export function RefreshButton({ onClick, disabled }: { onClick: () => void; disa
   );
 }
 
-export function MinimalButton({
-  onClick,
-  disabled,
-  title,
-  icon,
-  children,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  title?: string;
-  icon?: Parameters<typeof Icon>[0]['name'];
-  children: ComponentChildren;
-}) {
-  return (
-    <button
-      type="button"
-      class={`${bp('button', 'minimal')} ${disabled ? bp('disabled') : ''}`}
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-    >
-      {icon && <Icon name={icon} />}
-      <span class={bp('button-text')}>{children}</span>
-    </button>
-  );
-}
-
 /** SA's full-card "Fetching submissions..." state: a large Blueprint spinner above the text. */
 export function LoadingState({ children }: { children: ComponentChildren }) {
   // Blueprint's SpinnerSize.LARGE (100px) markup: stroke width 4, so the viewBox is 3 3 94 94.

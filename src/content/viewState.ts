@@ -9,8 +9,6 @@ export type GradingTab = 'submissions' | 'dashboard';
 export type ViewState = {
   /** Tab on SA's grading page. */
   gradingTab: GradingTab;
-  /** Tab in the navbar button's panel. */
-  overlayTab: GradingTab;
   submissionsShowAll: boolean;
   submissionsMyGroups: boolean;
   submissionsProgress: Progress[];
@@ -22,7 +20,6 @@ export type ViewState = {
 
 const DEFAULT_VIEW: ViewState = {
   gradingTab: 'submissions',
-  overlayTab: 'submissions',
   submissionsShowAll: false,
   submissionsMyGroups: true,
   submissionsProgress: PROGRESS_ORDER,

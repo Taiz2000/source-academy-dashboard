@@ -1,16 +1,15 @@
 # source-academy-dashboard
 Dashboard extension for Source Academy
 
-Adds a **Dashboard** tab to the grading page of https://sourceacademy.nus.edu.sg, and a
-**Grading Dashboard** button next to **Grading** in the staff navbar. Both fetch every submission
-you can grade in a single request, so filtering happens client-side instead of re-querying the
-backend on every change, and show a heatmap of students × assessments.
+Adds a **Dashboard** tab to the grading page of https://sourceacademy.nus.edu.sg: a heatmap of
+students × assessments. It fetches every submission you can grade in a single request, so
+filtering happens client-side instead of re-querying the backend on every change. An optional
+alternative Submissions menu shows the same data as one table.
 
 ## Options
 
 Click the extension's toolbar icon:
 
-- **Replace Game Simulator button**: put the Grading Dashboard button in place of Game Simulator.
 - **Open submissions in a new tab** (on by default): off opens them in the same tab, like SA.
 - **Use alternative Submissions menu (work in progress)** (off by default): the grading page's
   Submissions tab shows this extension's table (every row at once, status chips, hide options)
@@ -54,18 +53,16 @@ loading `dist/` again replaces the existing entry instead of adding a new one.
 - `src/content/api.ts` calls
   `GET https://api.sourceacademy.nus.edu.sg/v2/courses/{id}/admin/grading?offset=0&pageSize=100000&group=…`.
   (`/admin/grading/all_submissions` is admin-only, so it returns 403 for staff.)
-- `src/content/navbar.ts` clones the Grading navbar button and keeps it inserted with a
-  `MutationObserver`, since React re-renders the navbar on navigation.
 - `src/content/grading.ts` turns the "Submissions" title on SA's grading page into
-  Submissions | Dashboard tabs; Dashboard hides SA's table (via an attribute, so React keeps
-  reconciling it) and mounts the heatmap in its place. Also kept in place with a `MutationObserver`.
+  Submissions | Dashboard tabs. Dashboard (and Submissions, with the alternative menu enabled)
+  hides SA's table via an attribute, so React keeps reconciling it, and mounts our view in its
+  place. React rebuilds this DOM, so a `MutationObserver` keeps re-applying it.
 - `src/content/panel.tsx` is a separate bundle (`dist/panel.js`, Preact UI + AG Grid, ~1MB) that
-  the content script `import()`s the first time the dashboard opens, so other SA pages stay light.
-- `src/content/Overlay.tsx` renders into the page's DOM using SA's own markup and classes
-  (ContentDisplay card, Blueprint, Tailwind badge classes, AG Grid with SA's theme parameters), so
-  it looks like the grading page; our own CSS (`panel.css`) is scoped with `sad-`. Progress
-  statuses follow the frontend's `backendParamsToProgressStatus`.
-
+  the content script `import()`s the first time one of our views opens, so other SA pages stay
+  light. The views render into SA's own card using its classes (Blueprint, Tailwind badge classes,
+  AG Grid with SA's theme parameters), so they look like the grading page; our own CSS
+  (`panel.css`) is scoped with `sad-`. Progress statuses follow the frontend's
+  `backendParamsToProgressStatus`.
 - `src/content/data.ts` shares one fetch per scope between every view on the page and saves it to
   the cache (`src/cache.ts`); `src/content/viewState.ts` saves the views.
 - `src/content/navigation.ts` opens submissions in a new tab, or in the same tab through SA's

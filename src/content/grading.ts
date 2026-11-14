@@ -27,10 +27,10 @@ const TABS: { mode: Mode; label: string }[] = [
 const hiddenStyle = new CSSStyleSheet();
 hiddenStyle.replaceSync(`[${HIDDEN_MARKER}="${INSTANCE}"] { display: none !important; }`);
 
-/** SA's grading table wrapper; our overlay reuses its class, so skip that one. */
+/** SA's grading table wrapper, on the grading overview only. */
 function findWrapper(): HTMLElement | null {
   if (!OVERVIEW_PATH.test(location.pathname)) return null;
-  return document.querySelector<HTMLElement>('.grading-table-wrapper:not(.sad-root)');
+  return document.querySelector<HTMLElement>('.grading-table-wrapper');
 }
 
 /** The "Submissions" title: a Blueprint UI text in the wrapper's first row. */

@@ -112,7 +112,6 @@ function Popup() {
   return (
     <>
       <h1>Grading Dashboard</h1>
-      <Toggle settings={settings} name="replaceGameSimulator" label="Replace Game Simulator button" />
       <Toggle settings={settings} name="openInNewTab" label="Open submissions in a new tab" />
       <Toggle
         settings={settings}

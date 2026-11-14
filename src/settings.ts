@@ -1,8 +1,6 @@
 // User options, shared by the toolbar popup and the content script via chrome.storage.sync.
 
 export type Settings = {
-  /** Hide SA's "Game Simulator" navbar link and put the dashboard button in its place. */
-  replaceGameSimulator: boolean;
   /** Open submissions from the dashboard in a new browser tab; off keeps SA's same-tab behaviour. */
   openInNewTab: boolean;
   /** Show our submissions table instead of SA's on the grading page's Submissions tab. */
@@ -21,7 +19,6 @@ export type Settings = {
 export const DEFAULT_HIDDEN_GROUPS = ['AWOL', 'NOTINCS1101S'];
 
 export const DEFAULT_SETTINGS: Settings = {
-  replaceGameSimulator: false,
   openInNewTab: true,
   useAltSubmissions: false,
   hideOwnSubmissions: false,

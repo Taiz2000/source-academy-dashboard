@@ -1,8 +1,8 @@
 // Entry point of panel.js, the lazily loaded part of the extension: the UI and AG Grid.
-// The content script imports it the first time a dashboard is opened.
+// The content script imports it the first time one of our views opens on SA's grading page.
+// Views render into the page's DOM, so SA's own CSS applies.
 import { render } from 'preact';
 
-import { Overlay } from './Overlay';
 import panelCss from './panel.css';
 import { HeatmapPanel } from './panels/HeatmapPanel';
 import { SubmissionsPanel } from './panels/SubmissionsPanel';
@@ -18,23 +18,16 @@ function adoptStyles() {
 }
 
 /**
- * Renders the overlay into `host`, which lives in the page's DOM so SA's own CSS applies. Reads
- * the saved view first, so it opens where it was last left (even in another browser tab).
+ * Renders the heatmap for the grading page's Dashboard tab. Reads the saved view first, so it opens
+ * where it was last left (even in another browser tab).
  */
-export async function mountPanel(host: HTMLElement, courseId: number, onClose: () => void) {
-  adoptStyles();
-  await loadView(courseId);
-  if (host.isConnected) render(<Overlay courseId={courseId} onClose={onClose} />, host);
-}
-
-/** Renders the heatmap alone, for the Dashboard tab inside SA's grading page. */
 export async function mountDashboard(host: HTMLElement, courseId: number) {
   adoptStyles();
   await loadView(courseId);
   if (host.isConnected) render(<HeatmapPanel courseId={courseId} />, host);
 }
 
-/** Renders our submissions table alone, in place of SA's (the "alternative Submissions menu"). */
+/** Renders our submissions table in place of SA's (the "alternative Submissions menu"). */
 export async function mountSubmissions(host: HTMLElement, courseId: number) {
   adoptStyles();
   await loadView(courseId);

@@ -8,13 +8,6 @@
  * ContentDisplay is "center-xs", which centres text. SA's grading page keeps that (columns without
  * "text-left" are centred), so we do too and left-align only our own text blocks.
  */
-.sad-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
 .sad-panel {
   display: flex;
   flex-direction: column;
@@ -141,7 +134,7 @@
   border-radius: 2px;
 }
 
-/* Fills the card below the controls; the overlay itself scrolls if the window is short. */
+/* Fills the card below the controls; the page scrolls if the window is short. */
 .sad-grid {
   height: max(420px, calc(100vh - 360px));
 }

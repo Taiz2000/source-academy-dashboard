@@ -41,20 +41,6 @@ export const PROGRESS_CELL_LABEL: Record<Progress, string> = {
   autograded: 'Autograded',
 };
 
-/**
- * SA's status badge colours (gradingBadgeColors.ts) as Tailwind v4 background shades:
- * purple-400, gray-400, red-400 (attempting/attempted), yellow-300, green-400, blue-300.
- */
-export const PROGRESS_COLOR: Record<Progress, string> = {
-  autograded: '#c27aff',
-  not_attempted: '#99a1af',
-  attempting: '#ff6467',
-  attempted: '#ff6467',
-  submitted: '#ffdf20',
-  graded: '#05df72',
-  published: '#8ec5ff',
-};
-
 export type Member = {
   /** Course registration id. */
   id: number;
@@ -146,39 +132,6 @@ export function countByProgress(rows: Submission[]): ProgressCounts {
   const counts = emptyCounts();
   for (const r of rows) counts[r.progress]++;
   return counts;
-}
-
-export type AssessmentSummary = {
-  id: number;
-  number: string;
-  title: string;
-  type: string;
-  total: number;
-  counts: ProgressCounts;
-};
-
-export function summarizeByAssessment(rows: Submission[]): AssessmentSummary[] {
-  const byId = new Map<number, AssessmentSummary>();
-  for (const r of rows) {
-    let summary = byId.get(r.assessmentId);
-    if (!summary) {
-      summary = {
-        id: r.assessmentId,
-        number: r.assessmentNumber,
-        title: r.assessmentTitle,
-        type: r.assessmentType,
-        total: 0,
-        counts: emptyCounts(),
-      };
-      byId.set(r.assessmentId, summary);
-    }
-    summary.total++;
-    summary.counts[r.progress]++;
-  }
-  // Most urgent first, then newest assessment (higher id) first.
-  return [...byId.values()].sort(
-    (a, b) => b.counts.submitted - a.counts.submitted || b.id - a.id,
-  );
 }
 
 export const uniqueSorted = (values: string[]) =>
