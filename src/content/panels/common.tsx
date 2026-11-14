@@ -36,7 +36,8 @@ export function SimpleDropdown<T>({
   onChange,
 }: {
   value: T;
-  options: readonly { value: T; label: string }[];
+  /** `dividerBefore` draws a menu divider above the option. */
+  options: readonly { value: T; label: string; dividerBefore?: boolean }[];
   onChange: (value: T) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -72,7 +73,8 @@ export function SimpleDropdown<T>({
         <div class={`${bp('popover')} sad-dropdown-popover`}>
           <div class={bp('popover-content')}>
             <ul class={bp('menu')} role="menu">
-              {options.map(o => (
+              {options.flatMap(o => [
+                ...(o.dividerBefore ? [<li key={`${o.label}-divider`} class={bp('menu-divider')} />] : []),
                 <li key={o.label} role="none">
                   <a
                     role="menuitem"
@@ -85,8 +87,8 @@ export function SimpleDropdown<T>({
                   >
                     <div class={bp('fill', 'text-overflow-ellipsis')}>{o.label}</div>
                   </a>
-                </li>
-              ))}
+                </li>,
+              ])}
             </ul>
           </div>
         </div>
@@ -147,18 +149,20 @@ export function LoadingState({ children }: { children: ComponentChildren }) {
 
 /** "N submissions fetched in Xs at HH:MM" plus what the popup's hide options removed. */
 export function fetchSummary(data: DataState, filtered: FilterResult | null): string | null {
-  const { result, rows } = data;
-  if (!result) return null;
+  const { ready, rows, fetchedAt: at } = data;
+  if (!ready || !at) return null;
   const hidden = filtered?.hidden;
   const hiddenTotal = hidden ? hidden.own + hidden.tutors + hidden.groups : 0;
-  const at = result.fetchedAt;
   const when =
     at.toDateString() === new Date().toDateString() ? at.toLocaleTimeString() : at.toLocaleString();
   const count = `${rows.length.toLocaleString()} submissions`;
   return (
     (data.fromCache
       ? `${count} from the saved copy of ${when}`
-      : `${count} fetched in ${(result.ms / 1000).toFixed(1)}s at ${when}`) +
+      : data.ms !== null
+        ? `${count} fetched in ${(data.ms / 1000).toFixed(1)}s at ${when}`
+        : // E.g. one group, out of an all-groups fetch made earlier on this page.
+          `${count} as of ${when}`) +
     (data.loading ? ` · fetching the latest${data.fromCache ? ' in the background' : ''}…` : '') +
     (hiddenTotal > 0
       ? ` · ${hiddenTotal.toLocaleString()} hidden by settings (own: ${hidden!.own}, tutors: ${hidden!.tutors}, groups: ${hidden!.groups})`
@@ -174,8 +178,7 @@ type FetchStatusProps = {
 
 /** Fetch errors and warnings, one line each. */
 export function FetchWarnings({ courseId, data, filtered }: FetchStatusProps) {
-  const { result, rows, error } = data;
-  const serverCount = result?.response.count ?? 0;
+  const { capped, error } = data;
   return (
     <>
       {error && <p class="sad-status sad-error">Fetch failed: {error}</p>}
@@ -185,9 +188,9 @@ export function FetchWarnings({ courseId, data, filtered }: FetchStatusProps) {
           Select this course in Source Academy and reload the page.
         </p>
       )}
-      {result && rows.length < serverCount && (
+      {capped && (
         <p class="sad-status sad-error">
-          Only {rows.length} of {serverCount} rows returned — the page size cap was hit.
+          Only {capped.got} of {capped.total} rows returned — the page size cap was hit.
         </p>
       )}
     </>
@@ -201,7 +204,7 @@ export function FetchStatus(props: FetchStatusProps) {
   const muted = `${bp('text-muted')} sad-status`;
   return (
     <>
-      {data.loading && !data.result && (
+      {data.loading && !data.ready && (
         <p class={muted}>Fetching submissions… this can take up to 30s.</p>
       )}
       {summary && <p class={muted}>{summary}</p>}

@@ -30,12 +30,14 @@ Everything stays in your browser; nothing is sent anywhere except Source Academy
 - **Views** (`chrome.storage.local`, per course): the last tab, scope and filters used, so a new
   browser tab (e.g. after grading a submission opened in one) opens where you left off. Read when
   a view opens, never synced live between open tabs.
-- **Cached submissions** (`chrome.storage.local`): the last grading fetch for "my groups" and for
-  "all groups", one copy each (any course), tagged with the course and SA user id and shown only
-  to that user on that course. A page shows the saved copy at once and fetches fresh data in the
-  background. This includes students' names, usernames, groups, progress and XP (~25MB for a
-  50k-row course), kept until replaced or cleared, so use **Clear cached data** on shared
-  computers. Also cached: group names and assessment types seen, for the filter menus.
+- **Cached submissions** (`chrome.storage.local`): the submissions fetched for one course (the
+  last one opened), tagged with the SA user id and shown only to that user, stored one group per
+  entry with the time each was fetched. Fetching "all groups" fills every group; one group or "my
+  groups" refreshes just those. A page shows the saved data at once; "my groups" and "all groups"
+  always refetch in the background, a single group only if its data is over an hour old. This
+  includes students' names, usernames, groups, progress and XP (~25MB for a 50k-row course), kept
+  until replaced or cleared, so use **Clear cached data** on shared computers. Also cached: group
+  names (with tutors, from the grading summary) and assessment types, for the filter menus.
 
 ## Build & load
 
@@ -67,8 +69,11 @@ loading `dist/` again replaces the existing entry instead of adding a new one.
   AG Grid with SA's theme parameters), so they look like the grading page; our own CSS
   (`panel.css`) is scoped with `sad-`. Progress statuses follow the frontend's
   `backendParamsToProgressStatus`.
-- `src/content/data.ts` shares one fetch per scope between every view on the page and saves it to
-  the cache (`src/cache.ts`); `src/content/viewState.ts` saves the views.
+- `src/content/data.ts` keeps the course's submissions in per-group pieces shared by every view,
+  fetched per scope (my groups, all groups, or one group via SA's exact-match `groupName` filter,
+  which like "my groups" omits team submissions) and saved to the cache (`src/cache.ts`).
+  `src/content/groups.ts` lists groups from `GET /admin/grading/summary`; `src/content/viewState.ts`
+  saves the views.
 - `src/content/navigation.ts` opens submissions in a new tab, or in the same tab through SA's
   React Router (push a history entry and dispatch `popstate`) so the page doesn't reload.
 

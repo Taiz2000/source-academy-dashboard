@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
 
 import { typeKey, useAssessmentTypes } from '../assessmentTypes';
-import { bp } from '../blueprint';
+import { ALL, MINE, type Scope } from '../api';
 import { useSubmissions } from '../data';
 import { useCourseGroups } from '../groups';
 import { buildHeatmap } from '../heatmap/model';
@@ -16,29 +16,32 @@ import { useSettings } from '../../useSettings';
 import { saveView, view } from '../viewState';
 import { FetchStatus, GradingText, RefreshButton, SimpleDropdown } from './common';
 
-/** Menu entry that fetches every group so the others can be listed; not a selectable scope. */
-const LOAD_GROUPS = Symbol('load groups');
+/** Menu values besides group names. */
+const MY_GROUPS = Symbol('my groups');
+const ALL_GROUPS = Symbol('all groups');
 
-type GroupChoice = string | null | typeof LOAD_GROUPS;
+type GroupChoice = string | typeof MY_GROUPS | typeof ALL_GROUPS;
+
+const scopeOf = (choice: GroupChoice): Scope =>
+  choice === MY_GROUPS ? MINE : choice === ALL_GROUPS ? ALL : { kind: 'group', name: choice };
 
 /**
- * Students × assessments, for your own groups (the fast group fetch) or any one group (picked out
- * of the all-groups fetch). Each cell shows the submission's status and XP awarded.
+ * Students × assessments, for your own groups, all groups or any one group, each its own fetch
+ * (see data.ts for how they share saved data). Each cell shows the submission's status and XP.
  */
 export function HeatmapPanel({ courseId }: { courseId: number }) {
-  // Start from the saved view (viewState.ts). A null group means "my groups"; the types saved are
-  // the ones switched *on*, so types other than the defaults start out hidden.
-  const [group, setGroup] = useState(() => view(courseId).heatmapGroup);
-  const [loadGroups, setLoadGroups] = useState(false);
-
-  // Each scope is only fetched when needed, but either is reused if another panel fetched it.
-  const mine = useSubmissions(courseId, true, group === null);
-  const all = useSubmissions(courseId, false, group !== null || loadGroups);
-  const data = group === null ? mine : all;
+  // Start from the saved view (viewState.ts); the types saved are the ones switched *on*, so types
+  // other than the defaults start out hidden.
+  const [choice, setChoice] = useState<GroupChoice>(() => {
+    const saved = view(courseId);
+    return saved.heatmapAllGroups ? ALL_GROUPS : (saved.heatmapGroup ?? MY_GROUPS);
+  });
+  const group = typeof choice === 'string' ? choice : null;
+  const data = useSubmissions(courseId, scopeOf(choice));
 
   const filtered = useFilteredRows(courseId, data.rows);
   const types = useAssessmentTypes(courseId, data.rows);
-  const groups = useCourseGroups(courseId, all.result ? all.rows : null);
+  const groups = useCourseGroups(courseId);
   const settings = useSettings();
   const [selectedTypes, setSelectedTypes] = useState<ReadonlySet<string>>(
     () => new Set(view(courseId).heatmapTypes),
@@ -72,7 +75,7 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
     }
     return [...ids];
   }, [heatmap, displayedStudents]);
-  const publishBlocked = group !== null && !settings?.allowPublishAnywhere;
+  const publishBlocked = choice !== MY_GROUPS && !settings?.allowPublishAnywhere;
   const publishDisabled = publishBlocked
     ? 'Publish all is disabled for groups other than your own; you can override this in the options.'
     : // A saved copy may be out of date, and publishing again re-notifies students.
@@ -82,39 +85,39 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
 
   const groupOptions = useMemo(() => {
     const hidden = settings?.hideGroups ? new Set(settings.hiddenGroups.map(groupKey)) : null;
-    const listed = (groups ?? []).filter(g => !hidden?.has(groupKey(g)));
-    if (group !== null && !listed.includes(group)) listed.unshift(group);
-    const options: { value: GroupChoice; label: string }[] = [
-      { value: null, label: 'my groups' },
-      ...listed.map(g => ({ value: g, label: g })),
-    ];
-    if (!groups) {
-      options.push({
-        value: LOAD_GROUPS,
-        label: all.loading ? 'loading all groups…' : 'other groups… (fetches all groups, ~30s)',
-      });
+    const listed = groups.filter(g => !hidden?.has(groupKey(g.name)));
+    if (group !== null && !listed.some(g => g.name === group)) {
+      listed.unshift({ name: group, leaderName: null });
     }
+    const options: { value: GroupChoice; label: string; dividerBefore?: boolean }[] = [
+      { value: MY_GROUPS, label: 'my groups' },
+      { value: ALL_GROUPS, label: 'all groups' },
+      ...listed.map((g, i) => ({
+        value: g.name,
+        label: g.leaderName ? `${g.name} (${g.leaderName})` : g.name,
+        dividerBefore: i === 0,
+      })),
+    ];
     return options;
-  }, [groups, group, settings, all.loading]);
+  }, [groups, group, settings]);
 
   return (
     <div class="sad-panel">
       <div style={{ display: 'flex', justifyContent: 'flex-start', columnGap: '0.5rem' }}>
         <GradingText>Viewing submissions from</GradingText>
         <SimpleDropdown<GroupChoice>
-          value={group}
+          value={choice}
           options={groupOptions}
           onChange={value => {
-            if (value === LOAD_GROUPS) {
-              setLoadGroups(true);
-              return;
-            }
-            saveView(courseId, { heatmapGroup: value });
-            setGroup(value);
+            saveView(courseId, {
+              heatmapGroup: typeof value === 'string' ? value : null,
+              heatmapAllGroups: value === ALL_GROUPS,
+            });
+            setChoice(value);
           }}
         />
         <RefreshButton onClick={data.reload} disabled={data.loading} />
-        {heatmap && data.result && (
+        {heatmap && data.ready && (
           <GradingText muted>
             {heatmap.students.length} students × {heatmap.columns.length} assessments
           </GradingText>
@@ -122,14 +125,6 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
       </div>
 
       <FetchStatus courseId={courseId} data={data} filtered={filtered} />
-      {group === null && loadGroups && all.loading && (
-        <p class={`${bp('text-muted')} sad-status`}>
-          Fetching all groups to list them… this can take up to 30s.
-        </p>
-      )}
-      {group === null && all.error && (
-        <p class="sad-status sad-error">Couldn't fetch all groups: {all.error}</p>
-      )}
 
       {/* Like SA's filter row: filters on the left, the mode pill on the right. */}
       <div class="sad-toolbar" style={{ justifyContent: 'space-between' }}>
@@ -141,7 +136,7 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
             setSelectedTypes(next);
           }}
         />
-        {heatmap && data.result && (
+        {heatmap && data.ready && (
           <PublishAll
             courseId={courseId}
             targetIds={publishTargets}
@@ -156,7 +151,7 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
         <HeatmapLegend />
       </div>
 
-      {heatmap && data.result && (
+      {heatmap && data.ready && (
         <HeatmapGrid
           courseId={courseId}
           heatmap={heatmap}

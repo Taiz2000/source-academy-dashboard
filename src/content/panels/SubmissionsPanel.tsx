@@ -3,6 +3,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { PROGRESS_BADGE_COLOR } from '../badges';
 import { bp } from '../blueprint';
 import { ChipFilter } from '../ChipFilter';
+import { ALL, MINE } from '../api';
 import { useSubmissions } from '../data';
 import {
   countByProgress,
@@ -46,7 +47,7 @@ export function SubmissionsPanel({ courseId }: { courseId: number }) {
   // Start from the saved view (viewState.ts); defaults match SA's.
   const [showAll, setShowAll] = useState(() => view(courseId).submissionsShowAll);
   const [group, setGroup] = useState(() => view(courseId).submissionsMyGroups);
-  const data = useSubmissions(courseId, group);
+  const data = useSubmissions(courseId, group ? MINE : ALL);
   const filtered = useFilteredRows(courseId, data.rows);
   const visible = filtered?.visible ?? NO_ROWS;
   const viewRows = useMemo(() => (showAll ? visible : visible.filter(isUnpublished)), [visible, showAll]);
@@ -93,11 +94,11 @@ export function SubmissionsPanel({ courseId }: { courseId: number }) {
 
       <FetchWarnings courseId={courseId} data={data} filtered={filtered} />
 
-      {data.loading && !data.result && (
+      {data.loading && !data.ready && (
         <LoadingState>Fetching submissions... this can take up to 30s.</LoadingState>
       )}
 
-      {data.result && (
+      {data.ready && (
         <>
           {/* Where SA shows its filters and the Grading Mode button. */}
           <div

@@ -12,8 +12,9 @@ export type ViewState = {
   submissionsShowAll: boolean;
   submissionsMyGroups: boolean;
   submissionsProgress: Progress[];
-  /** null: my groups. */
+  /** One group; null: my groups (or all groups, with `heatmapAllGroups`). */
   heatmapGroup: string | null;
+  heatmapAllGroups: boolean;
   /** typeKeys switched on. */
   heatmapTypes: string[];
 };
@@ -24,6 +25,7 @@ const DEFAULT_VIEW: ViewState = {
   submissionsMyGroups: true,
   submissionsProgress: PROGRESS_ORDER,
   heatmapGroup: null,
+  heatmapAllGroups: false,
   heatmapTypes: [...DEFAULT_SELECTED_TYPES],
 };
 
