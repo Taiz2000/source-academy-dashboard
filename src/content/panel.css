@@ -182,31 +182,65 @@
   font-weight: 600;
 }
 
-/* Heatmap column header: type (with its colour stripe) above the name, up to three lines. */
+/*
+ * Heatmap column header: a full-width band in the type's colour holding the type, then the name
+ * (up to three lines) and the assessment's max XP below it. The header cell's padding is removed so the band reaches its edges.
+ */
+.sad-root .ag-header-cell.sad-heat-header {
+  padding: 0;
+}
+
 .sad-col-header {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   width: 100%;
   height: 100%;
-  padding-top: 4px;
-  border-top: 3px solid var(--type-color);
   line-height: 1.25;
   white-space: normal;
   cursor: pointer;
 }
 
 .sad-col-type {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  flex: none;
+  height: 20px;
+  /* 1px gap between bands, so neighbouring columns of the same type stay distinct. */
+  margin: 0 1px;
+  background: #fff;
+}
+
+.sad-col-type-fill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .sad-col-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 2px 6px 0;
+  font-size: 12px;
+  text-align: center;
+}
+
+.sad-col-xp {
+  flex: none;
+  padding: 1px 0 4px;
+  font-size: 11px;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.sad-col-title > span {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
-  font-size: 12px;
   overflow-wrap: anywhere;
 }

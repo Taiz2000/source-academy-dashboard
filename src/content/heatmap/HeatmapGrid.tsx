@@ -7,7 +7,7 @@ import type {
 } from 'ag-grid-community';
 import { useMemo } from 'preact/hooks';
 
-import { typeBadgeColor, typeColor } from '../assessmentTypes';
+import { typeBadgeColor } from '../assessmentTypes';
 import { BADGE_COLOR } from '../badges';
 import { AgGrid } from '../grid/AgGrid';
 import { type Member, PROGRESS_CELL_LABEL, PROGRESS_LABEL, type Submission } from '../model';
@@ -15,7 +15,8 @@ import { cellColors, GRADIENT_PROGRESS, scoreRatio } from './colors';
 import type { Heatmap, HeatmapColumn } from './model';
 
 const ROW_HEIGHT = 40;
-const HEADER_HEIGHT = 76;
+// Type band (20px) + three title lines (47px) + max XP line (~19px).
+const HEADER_HEIGHT = 86;
 const NAME_WIDTH = 220;
 // Wide enough for the longest status label, "Not Attempted".
 const CELL_WIDTH = 96;
@@ -69,21 +70,31 @@ class AssessmentHeader implements IHeaderComp {
 
     this.gui = document.createElement('div');
     this.gui.className = 'sad-col-header';
-    this.gui.style.setProperty('--type-color', typeColor(assessment.type));
 
-    const type = document.createElement('span');
-    // The text half of SA's type badge classes, e.g. "text-indigo-600".
-    type.className = `sad-col-type ${BADGE_COLOR[typeBadgeColor(assessment.type)].split(' ')[1]}`;
-    type.textContent = assessment.type;
+    // Full-width band in the type's colour with the type (and sort direction) in it.
+    // SA's type badge colours (e.g. "bg-indigo-400/25! text-indigo-600"). The badge background is
+    // translucent, so the band is filled on white to match the badges on SA's white table.
+    const type = document.createElement('div');
+    type.className = 'sad-col-type';
+    const fill = document.createElement('div');
+    fill.className = `sad-col-type-fill ${BADGE_COLOR[typeBadgeColor(assessment.type)]}`;
+    fill.textContent = assessment.type;
     this.sortMark = document.createElement('span');
     this.sortMark.className = 'sad-col-sort';
-    type.append(this.sortMark);
+    fill.append(this.sortMark);
+    type.append(fill);
 
-    const title = document.createElement('span');
+    const title = document.createElement('div');
     title.className = 'sad-col-title';
-    title.textContent = assessment.title;
+    const titleText = document.createElement('span');
+    titleText.textContent = assessment.title;
+    title.append(titleText);
 
-    this.gui.append(type, title);
+    const maxXp = document.createElement('div');
+    maxXp.className = 'sad-col-xp';
+    maxXp.textContent = `${assessment.maxXp.toLocaleString()} XP`;
+
+    this.gui.append(type, title, maxXp);
     this.gui.addEventListener('click', e => params.progressSort(e.shiftKey));
     params.column.addEventListener('sortChanged', this.onSortChanged);
     this.showSort();
@@ -129,6 +140,7 @@ function columns(courseId: number, heatmap: Heatmap): ColDef<Member>[] {
         colId: `assessment-${c.assessmentId}`,
         headerName: c.title,
         headerComponent: AssessmentHeader,
+        headerClass: 'sad-heat-header',
         headerComponentParams: { assessment: c },
         headerTooltip: `${c.number} ${c.title} (${c.type})`,
         width: CELL_WIDTH,
