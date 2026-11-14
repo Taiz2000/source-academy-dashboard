@@ -4,6 +4,7 @@ import { bp } from './blueprint';
 import { MinimalButton } from './panels/common';
 import { HeatmapPanel } from './panels/HeatmapPanel';
 import { SubmissionsPanel } from './panels/SubmissionsPanel';
+import { saveView, view } from './viewState';
 
 const TABS = [
   { id: 'submissions', label: 'Submissions', Panel: SubmissionsPanel },
@@ -11,9 +12,6 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
-
-// Reopening the overlay returns to the last tab used on this page.
-let lastTab: TabId = 'submissions';
 
 type Props = {
   courseId: number;
@@ -25,7 +23,8 @@ type Props = {
  * so SA's own stylesheet gives us its card, margins and padding.
  */
 export function Overlay({ courseId, onClose }: Props) {
-  const [tab, setTab] = useState<TabId>(lastTab);
+  // Reopening the overlay returns to the last tab used (viewState.ts).
+  const [tab, setTab] = useState<TabId>(() => view(courseId).overlayTab);
   const { Panel } = TABS.find(t => t.id === tab)!;
 
   return (
@@ -44,7 +43,7 @@ export function Overlay({ courseId, onClose }: Props) {
                       tabIndex={0}
                       aria-selected={t.id === tab}
                       onClick={() => {
-                        lastTab = t.id;
+                        saveView(courseId, { overlayTab: t.id });
                         setTab(t.id);
                       }}
                     >

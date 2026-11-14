@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'preact/hooks';
 
-import { DEFAULT_SELECTED_TYPES, typeKey, useAssessmentTypes } from '../assessmentTypes';
+import { typeKey, useAssessmentTypes } from '../assessmentTypes';
 import { bp } from '../blueprint';
 import { useSubmissions } from '../data';
 import { useCourseGroups } from '../groups';
@@ -12,6 +12,7 @@ import type { Member } from '../model';
 import { groupKey } from '../../settings';
 import { useFilteredRows } from '../useFilteredRows';
 import { useSettings } from '../../useSettings';
+import { saveView, view } from '../viewState';
 import { FetchStatus, GradingText, RefreshButton, SimpleDropdown } from './common';
 
 /** Menu entry that fetches every group so the others can be listed; not a selectable scope. */
@@ -19,17 +20,14 @@ const LOAD_GROUPS = Symbol('load groups');
 
 type GroupChoice = string | null | typeof LOAD_GROUPS;
 
-// Survive switching tabs and reopening the overlay within the page. Stores the types switched
-// *on*, so types other than the defaults start out hidden. A null group means "my groups".
-let lastSelectedTypes = new Set(DEFAULT_SELECTED_TYPES);
-let lastGroup: string | null = null;
-
 /**
  * Students × assessments, for your own groups (the fast group fetch) or any one group (picked out
  * of the all-groups fetch). Each cell shows the submission's status and XP awarded.
  */
 export function HeatmapPanel({ courseId }: { courseId: number }) {
-  const [group, setGroup] = useState(lastGroup);
+  // Start from the saved view (viewState.ts). A null group means "my groups"; the types saved are
+  // the ones switched *on*, so types other than the defaults start out hidden.
+  const [group, setGroup] = useState(() => view(courseId).heatmapGroup);
   const [loadGroups, setLoadGroups] = useState(false);
 
   // Each scope is only fetched when needed, but either is reused if another panel fetched it.
@@ -41,7 +39,9 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
   const types = useAssessmentTypes(courseId, data.rows);
   const groups = useCourseGroups(courseId, all.result ? all.rows : null);
   const settings = useSettings();
-  const [selectedTypes, setSelectedTypes] = useState(lastSelectedTypes);
+  const [selectedTypes, setSelectedTypes] = useState<ReadonlySet<string>>(
+    () => new Set(view(courseId).heatmapTypes),
+  );
 
   const heatmap = useMemo(() => {
     if (!filtered) return null;
@@ -83,7 +83,7 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
               setLoadGroups(true);
               return;
             }
-            lastGroup = value;
+            saveView(courseId, { heatmapGroup: value });
             setGroup(value);
           }}
         />
@@ -110,7 +110,7 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
           types={types}
           selected={selectedTypes}
           onChange={next => {
-            lastSelectedTypes = next;
+            saveView(courseId, { heatmapTypes: [...next] });
             setSelectedTypes(next);
           }}
         />

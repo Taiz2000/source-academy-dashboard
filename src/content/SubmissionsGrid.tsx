@@ -8,6 +8,7 @@ import { AgGrid } from './grid/AgGrid';
 import { ColumnHeader } from './grid/ColumnHeader';
 import { ProgressFilter, type ProgressFilterModel } from './grid/ProgressFilter';
 import { iconHtml } from './icons';
+import { onLinkClick, openPath } from './navigation';
 import {
   PROGRESS_CELL_LABEL,
   PROGRESS_ORDER,
@@ -18,16 +19,16 @@ import {
 
 const submissionPath = (courseId: number, s: Submission) => `/courses/${courseId}/grading/${s.id}`;
 
-/** SA's "Grade" action link (GradingActions.tsx), opening the submission in a new tab. */
+/** SA's "Grade" action link (GradingActions.tsx); see navigation.ts for where it opens. */
 function gradeLink(courseId: number, s: Submission): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'gap-x-1.25 [&>a]:flex';
   wrapper.style.cssText = 'display:flex;justify-content:flex-start';
   const link = document.createElement('a');
-  link.href = submissionPath(courseId, s);
-  link.target = '_blank';
-  link.rel = 'noopener';
-  link.title = 'Grade (opens in a new tab)';
+  const path = submissionPath(courseId, s);
+  link.href = path;
+  link.addEventListener('click', e => onLinkClick(e, path));
+  link.title = 'Grade';
   link.setAttribute('aria-label', 'Grade');
   link.className =
     `${bp('button', 'minimal')} my-auto rounded-[10px] text-blue-500 ` +
@@ -153,11 +154,11 @@ export function SubmissionsGrid({ courseId, rows, loading, progressFilter, onFil
       enableCellTextSelection: true,
       ensureDomOrder: true,
       suppressCellFocus: true,
-      // Like SA's grading mode, clicking a row opens the submission (here in a new tab).
+      // Like SA's grading mode, clicking a row opens the submission.
       onCellClicked: (e: CellClickedEvent<Submission>) => {
         const target = e.event?.target as Element | null;
         if (!e.data || target?.closest('a') || window.getSelection()?.toString()) return;
-        window.open(submissionPath(courseId, e.data), '_blank', 'noopener');
+        openPath(submissionPath(courseId, e.data));
       },
       onGridReady: e => {
         apiRef.current = e.api;

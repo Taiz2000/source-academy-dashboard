@@ -11,6 +11,7 @@ import { typeBadgeColor } from '../assessmentTypes';
 import { BADGE_COLOR } from '../badges';
 import { AgGrid } from '../grid/AgGrid';
 import { type Member, PROGRESS_CELL_LABEL, PROGRESS_LABEL, type Submission } from '../model';
+import { onLinkClick } from '../navigation';
 import { cellColors, GRADIENT_PROGRESS, scoreRatio } from './colors';
 import type { Heatmap, HeatmapColumn } from './model';
 
@@ -32,7 +33,7 @@ function cellTitle(column: HeatmapColumn, s: Submission | undefined): string {
   ].join('\n');
 }
 
-/** Status above XP; links to the submission (new tab) when there is one. */
+/** Status above XP; links to the submission when there is one (see navigation.ts). */
 function heatCell(courseId: number) {
   return (p: ICellRendererParams<Member, Submission | undefined>) => {
     const s = p.value;
@@ -43,9 +44,9 @@ function heatCell(courseId: number) {
     status.textContent = s ? PROGRESS_CELL_LABEL[s.progress] : PROGRESS_CELL_LABEL.not_attempted;
     body.append(status);
     if (s && body instanceof HTMLAnchorElement) {
-      body.href = `/courses/${courseId}/grading/${s.id}`;
-      body.target = '_blank';
-      body.rel = 'noopener';
+      const path = `/courses/${courseId}/grading/${s.id}`;
+      body.href = path;
+      body.addEventListener('click', e => onLinkClick(e, path));
       const score = document.createElement('span');
       score.className = 'sad-heat-score';
       score.textContent = String(s.xp);

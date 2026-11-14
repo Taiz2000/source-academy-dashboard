@@ -14,6 +14,7 @@ import {
 } from '../model';
 import { type FilterReport, SubmissionsGrid } from '../SubmissionsGrid';
 import { useFilteredRows } from '../useFilteredRows';
+import { saveView, view } from '../viewState';
 import {
   fetchSummary,
   FetchWarnings,
@@ -36,26 +37,24 @@ const GROUP_OPTIONS = [
   { value: false, label: 'all groups' },
 ] as const;
 
-// Survive switching tabs and reopening the overlay within the page. Defaults match SA's.
-let lastShowAll = false;
-let lastGroup = true;
-let lastSelectedProgress: ReadonlySet<Progress> = new Set(PROGRESS_ORDER);
-
 /**
  * Laid out like SA's grading page (Grading.tsx + GradingSubmissionsTable.tsx), with the same
  * spacing, but every row is shown at once: the group scope is one fetch, and "unpublished" and the
  * column filters only filter it in the browser.
  */
 export function SubmissionsPanel({ courseId }: { courseId: number }) {
-  const [showAll, setShowAll] = useState(lastShowAll);
-  const [group, setGroup] = useState(lastGroup);
+  // Start from the saved view (viewState.ts); defaults match SA's.
+  const [showAll, setShowAll] = useState(() => view(courseId).submissionsShowAll);
+  const [group, setGroup] = useState(() => view(courseId).submissionsMyGroups);
   const data = useSubmissions(courseId, group);
   const filtered = useFilteredRows(courseId, data.rows);
   const visible = filtered?.visible ?? NO_ROWS;
   const viewRows = useMemo(() => (showAll ? visible : visible.filter(isUnpublished)), [visible, showAll]);
 
   // Status chips; every status is shown by default.
-  const [selectedProgress, setSelectedProgress] = useState(lastSelectedProgress);
+  const [selectedProgress, setSelectedProgress] = useState<ReadonlySet<Progress>>(
+    () => new Set(view(courseId).submissionsProgress),
+  );
   const progressFilter = useMemo(
     () => (PROGRESS_ORDER.every(p => selectedProgress.has(p)) ? null : selectedProgress),
     [selectedProgress],
@@ -76,7 +75,7 @@ export function SubmissionsPanel({ courseId }: { courseId: number }) {
           value={showAll}
           options={SHOW_OPTIONS}
           onChange={value => {
-            lastShowAll = value;
+            saveView(courseId, { submissionsShowAll: value });
             setShowAll(value);
           }}
         />
@@ -85,7 +84,7 @@ export function SubmissionsPanel({ courseId }: { courseId: number }) {
           value={group}
           options={GROUP_OPTIONS}
           onChange={value => {
-            lastGroup = value;
+            saveView(courseId, { submissionsMyGroups: value });
             setGroup(value);
           }}
         />
@@ -122,7 +121,7 @@ export function SubmissionsPanel({ courseId }: { courseId: number }) {
                 allKeys={PROGRESS_ORDER}
                 selected={selectedProgress}
                 onChange={next => {
-                  lastSelectedProgress = next;
+                  saveView(courseId, { submissionsProgress: [...next] });
                   setSelectedProgress(next);
                 }}
               />
@@ -134,7 +133,8 @@ export function SubmissionsPanel({ courseId }: { courseId: number }) {
             <SubmissionsGrid
               courseId={courseId}
               rows={viewRows}
-              loading={data.loading}
+              // A saved copy stays usable while the fresh fetch runs.
+              loading={data.loading && !data.fromCache}
               progressFilter={progressFilter}
               onFiltered={setReport}
             />

@@ -5,7 +5,8 @@
   "description": "Adds a client-side grading dashboard to Source Academy.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqKqy7AHhgIBynrZR644VxCCYZev+jRcOBXbuR41kHtsSGWaUr+uP8v47/p8m/qIr+ZiY9zjg1h220GQx6MKrpIRBGBH4QIlTQ/Z3CCX89Kok2fExMk0u2vYsTXA242pEww5s20DRM7nSPPmh1Lxehg6B/V5X4Hj4YzOp/IuNL8SK7gxxaUqOWded5VpaFD3f4RTh6qY4XFA+y4GhUdSv3UwjfYr3anVpCTvtrMBlm6eK8Hm64aE3OExcZcE220Qr0SqiLus42jKLhlT9Yhruz3dKvBhM8Qy/E7+f26XcZi38vvn/hO49nAlniLg7ruPARevpp9nTJEE5Gc2dxNdn3wIDAQAB",
   "permissions": [
-    "storage"
+    "storage",
+    "unlimitedStorage"
   ],
   "action": {
     "default_title": "Grading Dashboard",

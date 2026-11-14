@@ -5,6 +5,7 @@ import { render } from 'preact';
 import { Overlay } from './Overlay';
 import panelCss from './panel.css';
 import { HeatmapPanel } from './panels/HeatmapPanel';
+import { loadView } from './viewState';
 
 const sheet = new CSSStyleSheet();
 sheet.replaceSync(panelCss);
@@ -15,16 +16,21 @@ function adoptStyles() {
   }
 }
 
-/** Renders the overlay into `host`, which lives in the page's DOM so SA's own CSS applies. */
-export function mountPanel(host: HTMLElement, courseId: number, onClose: () => void) {
+/**
+ * Renders the overlay into `host`, which lives in the page's DOM so SA's own CSS applies. Reads
+ * the saved view first, so it opens where it was last left (even in another browser tab).
+ */
+export async function mountPanel(host: HTMLElement, courseId: number, onClose: () => void) {
   adoptStyles();
-  render(<Overlay courseId={courseId} onClose={onClose} />, host);
+  await loadView(courseId);
+  if (host.isConnected) render(<Overlay courseId={courseId} onClose={onClose} />, host);
 }
 
 /** Renders the heatmap alone, for the Dashboard tab inside SA's grading page. */
-export function mountDashboard(host: HTMLElement, courseId: number) {
+export async function mountDashboard(host: HTMLElement, courseId: number) {
   adoptStyles();
-  render(<HeatmapPanel courseId={courseId} />, host);
+  await loadView(courseId);
+  if (host.isConnected) render(<HeatmapPanel courseId={courseId} />, host);
 }
 
 /** Unmounts whatever mountPanel or mountDashboard rendered into `host`. */

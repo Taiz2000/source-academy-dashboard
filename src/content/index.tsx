@@ -86,6 +86,11 @@ async function main() {
 
 main();
 
+// Opening a submission in this tab (navigation.ts) leaves the overlay's page too.
+window.addEventListener('popstate', () => {
+  if (host && location.pathname !== openedAtPath) closeOverlay();
+});
+
 // Clicking any real navbar link (even the current page's) should reveal the page again.
 document.addEventListener(
   'click',

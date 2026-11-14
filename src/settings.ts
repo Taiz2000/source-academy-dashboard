@@ -3,6 +3,8 @@
 export type Settings = {
   /** Hide SA's "Game Simulator" navbar link and put the dashboard button in its place. */
   replaceGameSimulator: boolean;
+  /** Open submissions from the dashboard in a new browser tab; off keeps SA's same-tab behaviour. */
+  openInNewTab: boolean;
   /** Hide submissions made by the logged-in user. */
   hideOwnSubmissions: boolean;
   /** Hide submissions made by any tutor (group leader) and by the logged-in user. */
@@ -18,6 +20,7 @@ export const DEFAULT_HIDDEN_GROUPS = ['AWOL', 'NOTINCS1101S'];
 
 export const DEFAULT_SETTINGS: Settings = {
   replaceGameSimulator: false,
+  openInNewTab: true,
   hideOwnSubmissions: false,
   hideTutorSubmissions: false,
   hideGroups: false,
@@ -32,10 +35,13 @@ export function saveSettings(changes: Partial<Settings>): Promise<void> {
   return chrome.storage.sync.set(changes);
 }
 
-/** Calls back with the settings that changed; returns an unsubscribe function. */
+/**
+ * Calls back with the settings that changed; returns an unsubscribe function. Listens to the sync
+ * area only: chrome.storage.onChanged would also deliver every write to storage.local, including
+ * the multi-megabyte cached fetches, to every tab.
+ */
 export function onSettingsChanged(callback: (changes: Partial<Settings>) => void): () => void {
-  const listener = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
-    if (area !== 'sync') return;
+  const listener = (changes: Record<string, chrome.storage.StorageChange>) => {
     const updated: Partial<Settings> = {};
     for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]) {
       if (key in changes) {
@@ -44,8 +50,8 @@ export function onSettingsChanged(callback: (changes: Partial<Settings>) => void
     }
     if (Object.keys(updated).length > 0) callback(updated);
   };
-  chrome.storage.onChanged.addListener(listener);
-  return () => chrome.storage.onChanged.removeListener(listener);
+  chrome.storage.sync.onChanged.addListener(listener);
+  return () => chrome.storage.sync.onChanged.removeListener(listener);
 }
 
 /** Case- and whitespace-insensitive key for comparing group names. */

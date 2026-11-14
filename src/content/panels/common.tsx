@@ -178,9 +178,15 @@ export function fetchSummary(data: DataState, filtered: FilterResult | null): st
   if (!result) return null;
   const hidden = filtered?.hidden;
   const hiddenTotal = hidden ? hidden.own + hidden.tutors + hidden.groups : 0;
+  const at = result.fetchedAt;
+  const when =
+    at.toDateString() === new Date().toDateString() ? at.toLocaleTimeString() : at.toLocaleString();
+  const count = `${rows.length.toLocaleString()} submissions`;
   return (
-    `${rows.length.toLocaleString()} submissions fetched in ${(result.ms / 1000).toFixed(1)}s ` +
-    `at ${result.fetchedAt.toLocaleTimeString()}` +
+    (data.fromCache
+      ? `${count} from the saved copy of ${when}`
+      : `${count} fetched in ${(result.ms / 1000).toFixed(1)}s at ${when}`) +
+    (data.loading ? ` · fetching the latest${data.fromCache ? ' in the background' : ''}…` : '') +
     (hiddenTotal > 0
       ? ` · ${hiddenTotal.toLocaleString()} hidden by settings (own: ${hidden!.own}, tutors: ${hidden!.tutors}, groups: ${hidden!.groups})`
       : '')

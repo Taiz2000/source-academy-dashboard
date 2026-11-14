@@ -9,9 +9,9 @@
 import { bp } from './blueprint';
 import { extensionAlive, INSTANCE } from './instance';
 import { currentCourseId } from './session';
+import { type GradingTab as Mode, loadView, saveView } from './viewState';
 
 type PanelModule = typeof import('./panel');
-type Mode = 'submissions' | 'dashboard';
 
 const TABS_MARKER = 'data-sad-grading-tabs';
 const HOST_MARKER = 'data-sad-grading-host';
@@ -68,8 +68,10 @@ function buildTabs(onSelect: (mode: Mode) => void): HTMLElement {
 }
 
 export function installGradingTabs(loadPanel: () => Promise<PanelModule>) {
-  // Kept while the page is open, so returning from grading a submission shows the same tab.
-  let mode: Mode = 'submissions';
+  // Each visit to the overview opens the tab saved last (viewState.ts), from any browser tab; null
+  // until it has been read for the current visit.
+  let mode: Mode | null = null;
+  let visitedPath: string | null = null;
   let host: HTMLElement | null = null;
   let scheduled = false;
 
@@ -77,7 +79,26 @@ export function installGradingTabs(loadPanel: () => Promise<PanelModule>) {
 
   const select = (next: Mode) => {
     mode = next;
+    const courseId = currentCourseId();
+    if (courseId !== null) saveView(courseId, { gradingTab: next });
     sync();
+  };
+
+  /** Reads the saved tab when the overview is entered (not on every DOM change while there). */
+  const trackVisit = (courseId: number | null) => {
+    const path = location.pathname;
+    if (!OVERVIEW_PATH.test(path) || courseId === null) {
+      visitedPath = null;
+      return;
+    }
+    if (visitedPath === path) return;
+    visitedPath = path;
+    mode = null;
+    loadView(courseId).then(saved => {
+      if (visitedPath !== path) return;
+      mode = saved.gradingTab;
+      sync();
+    });
   };
 
   const dropHost = () => {
@@ -127,10 +148,11 @@ export function installGradingTabs(loadPanel: () => Promise<PanelModule>) {
     if (host && host.parentElement !== wrapper) dropHost();
 
     const courseId = currentCourseId();
+    trackVisit(courseId);
     const titleRow = wrapper?.firstElementChild;
     const title = titleRow ? findTitle(titleRow) : null;
-    // Not on the overview, or SA is still loading its own submissions.
-    if (!wrapper || courseId === null || !titleRow || !title) return;
+    // Not on the overview, SA is still loading its own submissions, or the saved tab isn't read yet.
+    if (!wrapper || courseId === null || !titleRow || !title || mode === null) return;
 
     let tabs = wrapper.querySelector<HTMLElement>(`[${TABS_MARKER}="${INSTANCE}"]`);
     if (!tabs || tabs.nextElementSibling !== title) {

@@ -1,6 +1,7 @@
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 
+import { cachedDataBytes, clearCachedData } from '../cache';
 import {
   DEFAULT_HIDDEN_GROUPS,
   groupKey,
@@ -84,6 +85,27 @@ function HiddenGroupsEditor({ settings }: { settings: Settings }) {
   );
 }
 
+const formatBytes = (bytes: number) =>
+  bytes < 1e6 ? `${Math.round(bytes / 1e3)} KB` : `${(bytes / 1e6).toFixed(1)} MB`;
+
+/** Saved fetches and lists (cache.ts); open dashboards keep what they already loaded. */
+function CachedData() {
+  const [bytes, setBytes] = useState<number | null>(null);
+  const refresh = () => cachedDataBytes().then(setBytes);
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  return (
+    <div class="cache">
+      <span class="muted">Cached data: {bytes === null ? '…' : formatBytes(bytes)}</span>
+      <button class="link" disabled={!bytes} onClick={() => clearCachedData().then(refresh)}>
+        Clear cached data
+      </button>
+    </div>
+  );
+}
+
 function Popup() {
   const settings = useSettings();
   if (!settings) return null;
@@ -91,6 +113,7 @@ function Popup() {
     <>
       <h1>Grading Dashboard</h1>
       <Toggle settings={settings} name="replaceGameSimulator" label="Replace Game Simulator button" />
+      <Toggle settings={settings} name="openInNewTab" label="Open submissions in a new tab" />
       <Toggle settings={settings} name="hideOwnSubmissions" label="Hide your own submissions" />
       <Toggle
         settings={settings}
@@ -99,6 +122,7 @@ function Popup() {
       />
       <Toggle settings={settings} name="hideGroups" label="Hide groups" />
       <HiddenGroupsEditor settings={settings} />
+      <CachedData />
     </>
   );
 }

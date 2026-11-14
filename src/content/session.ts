@@ -5,6 +5,8 @@ import { decompressFromUTF16 } from 'lz-string';
 import { BACKEND_URL } from './config';
 
 type StoredSession = {
+  /** The logged-in user, across courses. */
+  userId?: number;
   accessToken?: string;
   refreshToken?: string;
   /** Course registration id (= student.id in grading rows) for `courseId`. */
@@ -35,6 +37,10 @@ export function readStoredSession(): StoredSession | null {
   } catch {
     return null;
   }
+}
+
+export function currentUserId(): number | null {
+  return readStoredSession()?.userId ?? null;
 }
 
 /** Course id from the current URL (/courses/{id}/...), falling back to the stored session. */
