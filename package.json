@@ -1,11 +1,10 @@
 {
   "name": "source-academy-dashboard",
   "version": "1.0.0",
-  "description": "Dashboard extension for Source Academy",
+  "description": "Source Academy Grading Dashboard: a Chrome extension adding a Dashboard tab to Source Academy's grading page",
   "scripts": {
     "build": "node build.mjs",
     "watch": "node build.mjs --watch",
-    "dev": "node build.mjs --dev",
     "typecheck": "tsc --noEmit"
   },
   "repository": {
