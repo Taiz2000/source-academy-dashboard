@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'preact/hooks';
+import { useCallback, useMemo, useState } from 'preact/hooks';
 
 import { typeKey, useAssessmentTypes } from '../assessmentTypes';
 import { ALL, MINE, type Scope } from '../api';
 import { useSubmissions } from '../data';
 import { useCourseGroups } from '../groups';
 import { buildHeatmap } from '../heatmap/model';
-import { HeatmapGrid } from '../heatmap/HeatmapGrid';
+import { actionsFor, runAction } from '../actions';
+import { CellMenu, type MenuItem } from '../heatmap/CellMenu';
+import { type CellMenuHandler, HeatmapGrid } from '../heatmap/HeatmapGrid';
 import { HeatmapLegend } from '../heatmap/HeatmapLegend';
 import { PublishAll } from '../heatmap/PublishAll';
 import { TypeFilter } from '../heatmap/TypeFilter';
@@ -83,6 +85,32 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
         ? 'Waiting for the latest data…'
         : null;
 
+  // Right-click menu on a cell: SA's per-submission actions, plus "Open in new tab" when
+  // submissions otherwise open in this tab. With nothing to offer, the browser's own menu shows.
+  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
+  const onCellMenu: CellMenuHandler = (e, submission) => {
+    // A saved copy may be out of date, e.g. publishing again re-notifies the student.
+    const stale = data.fromCache && data.loading ? 'Waiting for the latest data…' : undefined;
+    const items: MenuItem[] = actionsFor(submission).map(action => ({
+      label: action.label,
+      icon: action.icon,
+      disabledReason: stale,
+      onSelect: () => runAction(courseId, action, submission),
+    }));
+    if (settings && !settings.openInNewTab) {
+      items.unshift({
+        label: 'Open in new tab',
+        icon: 'share',
+        onSelect: () =>
+          window.open(`/courses/${courseId}/grading/${submission.id}`, '_blank', 'noopener'),
+      });
+    }
+    if (items.length === 0) return;
+    e.preventDefault();
+    setMenu({ x: e.clientX, y: e.clientY, items });
+  };
+
   const groupOptions = useMemo(() => {
     const hidden = settings?.hideGroups ? new Set(settings.hiddenGroups.map(groupKey)) : null;
     const listed = groups.filter(g => !hidden?.has(groupKey(g.name)));
@@ -157,8 +185,10 @@ export function HeatmapPanel({ courseId }: { courseId: number }) {
           heatmap={heatmap}
           highlightGraded={highlight}
           onDisplayedStudents={setDisplayedStudents}
+          onCellMenu={onCellMenu}
         />
       )}
+      {menu && <CellMenu x={menu.x} y={menu.y} items={menu.items} onClose={closeMenu} />}
     </div>
   );
 }

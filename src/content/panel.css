@@ -124,6 +124,26 @@
   }
 }
 
+/* Right-click menu on a heatmap cell, at the cursor. */
+.sad-cell-menu {
+  position: fixed;
+  z-index: 20;
+  text-align: left;
+}
+
+/* SA's confirmation dialog (no title, so the body sits closer to the top). */
+.sad-confirm-dialog {
+  text-align: left;
+}
+
+.sad-confirm-dialog p {
+  margin: 0 0 10px;
+}
+
+.sad-confirm-dialog p:last-child {
+  margin-bottom: 0;
+}
+
 /* Long menus (e.g. every group in the course) scroll. */
 .sad-root .sad-dropdown-popover [role='menu'] {
   max-height: 50vh;

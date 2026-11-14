@@ -33,8 +33,11 @@ function cellTitle(column: HeatmapColumn, s: Submission | undefined): string {
   ].join('\n');
 }
 
+/** Right-click on a submission's cell; call `preventDefault` to replace the browser's menu. */
+export type CellMenuHandler = (e: MouseEvent, submission: Submission) => void;
+
 /** Status above XP; links to the submission when there is one (see navigation.ts). */
-function heatCell(courseId: number) {
+function heatCell(courseId: number, onMenu: CellMenuHandler) {
   return (p: ICellRendererParams<Member, Submission | undefined>) => {
     const s = p.value;
     const body = document.createElement(s ? 'a' : 'div');
@@ -47,6 +50,7 @@ function heatCell(courseId: number) {
       const path = `/courses/${courseId}/grading/${s.id}`;
       body.href = path;
       body.addEventListener('click', e => onLinkClick(e, path));
+      body.addEventListener('contextmenu', e => onMenu(e, s));
       const score = document.createElement('span');
       score.className = 'sad-heat-score';
       score.textContent = String(s.xp);
@@ -122,8 +126,8 @@ class AssessmentHeader implements IHeaderComp {
 /** No submission sorts lowest, then by score. */
 const sortKey = (s: Submission | undefined) => (s ? scoreRatio(s) : -1);
 
-function columns(courseId: number, heatmap: Heatmap): ColDef<Member>[] {
-  const renderCell = heatCell(courseId);
+function columns(courseId: number, heatmap: Heatmap, onMenu: CellMenuHandler): ColDef<Member>[] {
+  const renderCell = heatCell(courseId, onMenu);
   return [
     {
       headerName: 'Student',
@@ -168,13 +172,25 @@ type Props = {
   highlightGraded: boolean;
   /** Called with the ids of the students left after the grid's filters, whenever they change. */
   onDisplayedStudents: (ids: Set<number>) => void;
+  onCellMenu: CellMenuHandler;
 };
 
 /** Students down the side, assessments across the top; see colors.ts for how cells are shaded. */
-export function HeatmapGrid({ courseId, heatmap, highlightGraded, onDisplayedStudents }: Props) {
+export function HeatmapGrid({
+  courseId,
+  heatmap,
+  highlightGraded,
+  onDisplayedStudents,
+  onCellMenu,
+}: Props) {
   const onDisplayedRef = useRef(onDisplayedStudents);
   onDisplayedRef.current = onDisplayedStudents;
-  const columnDefs = useMemo(() => columns(courseId, heatmap), [courseId, heatmap]);
+  const onMenuRef = useRef(onCellMenu);
+  onMenuRef.current = onCellMenu;
+  const columnDefs = useMemo(
+    () => columns(courseId, heatmap, (e, s) => onMenuRef.current(e, s)),
+    [courseId, heatmap],
+  );
   const options = useMemo<GridOptions<Member>>(
     () => ({
       defaultColDef: { sortable: true, resizable: true },

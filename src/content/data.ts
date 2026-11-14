@@ -479,28 +479,34 @@ export async function savedGroupNames(courseId: number): Promise<string[]> {
 }
 
 /**
- * Marks submissions as published in this page's data, as the backend has just confirmed it; no
- * refetch needed. Saved by `saveCourseToCache`, separately, to write each piece once.
+ * Applies a change the backend has just confirmed (e.g. publishing) to submissions in this page's
+ * data; no refetch needed. Saved by `saveCourseToCache`, separately, to write each piece once.
  */
-export function markPublished(courseId: number, ids: ReadonlySet<number>) {
+export function updateSubmissions(
+  courseId: number,
+  ids: ReadonlySet<number>,
+  update: (submission: RawSubmission) => RawSubmission,
+) {
   const store = stores.get(courseId);
   if (!store) return;
-  const publish = (rows: RawSubmission[]) =>
-    rows.some(s => ids.has(s.id))
-      ? rows.map(s => (ids.has(s.id) ? { ...s, isGradingPublished: true } : s))
-      : rows;
+  const apply = (rows: RawSubmission[]) =>
+    rows.some(s => ids.has(s.id)) ? rows.map(s => (ids.has(s.id) ? update(s) : s)) : rows;
   for (const [key, piece] of store.pieces) {
-    const rows = publish(piece.rows);
+    const rows = apply(piece.rows);
     if (rows !== piece.rows) {
       store.pieces.set(key, { ...piece, rows, normalized: undefined });
       store.dirty.add(key);
     }
   }
-  if (store.mine) store.mine = { ...store.mine, extra: publish(store.mine.extra) };
+  if (store.mine) store.mine = { ...store.mine, extra: apply(store.mine.extra) };
   notify(store);
 }
 
-/** Saves the pieces changed since the last save (e.g. by `markPublished`). */
+export function markPublished(courseId: number, ids: ReadonlySet<number>) {
+  updateSubmissions(courseId, ids, s => ({ ...s, isGradingPublished: true }));
+}
+
+/** Saves the pieces changed since the last save (e.g. by `updateSubmissions`). */
 export function saveCourseToCache(courseId: number) {
   const store = stores.get(courseId);
   if (!store) return;

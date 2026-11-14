@@ -3,7 +3,9 @@ Dashboard extension for Source Academy
 
 Adds a **Dashboard** tab to the grading page of https://sourceacademy.nus.edu.sg: a heatmap of
 students × assessments. It fetches every submission you can grade in a single request, so
-filtering happens client-side instead of re-querying the backend on every change. An optional
+filtering happens client-side instead of re-querying the backend on every change. Right-click a
+cell for SA's per-submission actions (Reautograde, Unsubmit, Publish, Unpublish, with SA's
+confirmations), or use **Publish all graded submissions** for everything highlighted. An optional
 alternative Submissions menu shows the same data as one table.
 
 ## Options
