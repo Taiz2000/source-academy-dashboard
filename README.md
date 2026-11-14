@@ -5,7 +5,7 @@ A Chrome extension for [Source Academy](https://sourceacademy.nus.edu.sg) staff.
 assessment across the top, so you can see at a glance who has submitted, what still needs grading,
 and what has been published, and act on it without paging through the submissions list.
 
-<!-- TODO: screenshot of the Dashboard -->
+![The Dashboard tab on Source Academy's grading page: students down the side, assessments across the top, and each cell coloured by the submission's status and score.](images/Demo.png)
 
 # How to use
 
