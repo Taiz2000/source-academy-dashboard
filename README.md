@@ -12,6 +12,9 @@ Click the extension's toolbar icon:
 
 - **Replace Game Simulator button**: put the Grading Dashboard button in place of Game Simulator.
 - **Open submissions in a new tab** (on by default): off opens them in the same tab, like SA.
+- **Use alternative Submissions menu (work in progress)** (off by default): the grading page's
+  Submissions tab shows this extension's table (every row at once, status chips, hide options)
+  instead of SA's.
 - **Hide your own submissions** / **Hide all tutors' submissions** / **Hide groups**: filter
   rows out of every view. Tutors are recognised as group leaders in the fetched data, plus you.
 - **Clear cached data**: see below.

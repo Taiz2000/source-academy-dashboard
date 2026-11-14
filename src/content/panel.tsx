@@ -5,6 +5,7 @@ import { render } from 'preact';
 import { Overlay } from './Overlay';
 import panelCss from './panel.css';
 import { HeatmapPanel } from './panels/HeatmapPanel';
+import { SubmissionsPanel } from './panels/SubmissionsPanel';
 import { loadView } from './viewState';
 
 const sheet = new CSSStyleSheet();
@@ -33,7 +34,14 @@ export async function mountDashboard(host: HTMLElement, courseId: number) {
   if (host.isConnected) render(<HeatmapPanel courseId={courseId} />, host);
 }
 
-/** Unmounts whatever mountPanel or mountDashboard rendered into `host`. */
+/** Renders our submissions table alone, in place of SA's (the "alternative Submissions menu"). */
+export async function mountSubmissions(host: HTMLElement, courseId: number) {
+  adoptStyles();
+  await loadView(courseId);
+  if (host.isConnected) render(<SubmissionsPanel courseId={courseId} />, host);
+}
+
+/** Unmounts whatever a mount function rendered into `host`. */
 export function unmountPanel(host: HTMLElement) {
   render(null, host);
 }

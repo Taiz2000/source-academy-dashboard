@@ -5,6 +5,8 @@ export type Settings = {
   replaceGameSimulator: boolean;
   /** Open submissions from the dashboard in a new browser tab; off keeps SA's same-tab behaviour. */
   openInNewTab: boolean;
+  /** Show our submissions table instead of SA's on the grading page's Submissions tab. */
+  useAltSubmissions: boolean;
   /** Hide submissions made by the logged-in user. */
   hideOwnSubmissions: boolean;
   /** Hide submissions made by any tutor (group leader) and by the logged-in user. */
@@ -21,6 +23,7 @@ export const DEFAULT_HIDDEN_GROUPS = ['AWOL', 'NOTINCS1101S'];
 export const DEFAULT_SETTINGS: Settings = {
   replaceGameSimulator: false,
   openInNewTab: true,
+  useAltSubmissions: false,
   hideOwnSubmissions: false,
   hideTutorSubmissions: false,
   hideGroups: false,

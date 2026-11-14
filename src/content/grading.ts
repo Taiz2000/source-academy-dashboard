@@ -1,6 +1,7 @@
 // Adds a "Dashboard" tab to SA's grading page (/courses/:id/grading). SA's "Submissions" title
 // (Grading.tsx) is swapped for Blueprint tabs, Submissions | Dashboard, at the title's size, and
-// while Dashboard is selected SA's table is hidden and the heatmap is shown in its place.
+// while Dashboard is selected SA's table is hidden and the heatmap is shown in its place. With the
+// "Use alternative Submissions menu" setting, the Submissions tab likewise shows our own table.
 //
 // React owns this DOM and rebuilds it (e.g. after its own fetch, or when returning from grading a
 // submission), so a MutationObserver re-applies everything. SA's nodes are only hidden through an
@@ -67,12 +68,28 @@ function buildTabs(onSelect: (mode: Mode) => void): HTMLElement {
   return tabs;
 }
 
-export function installGradingTabs(loadPanel: () => Promise<PanelModule>) {
+export type GradingTabs = {
+  setAltSubmissions(enabled: boolean): void;
+};
+
+/** Our views that can take the place of SA's table. */
+type View = 'dashboard' | 'submissions';
+
+const LOADING_TEXT: Record<View, string> = {
+  dashboard: 'Loading dashboard…',
+  submissions: 'Loading submissions…',
+};
+
+export function installGradingTabs(
+  loadPanel: () => Promise<PanelModule>,
+  options: { altSubmissions: boolean },
+): GradingTabs {
   // Each visit to the overview opens the tab saved last (viewState.ts), from any browser tab; null
   // until it has been read for the current visit.
   let mode: Mode | null = null;
   let visitedPath: string | null = null;
-  let host: HTMLElement | null = null;
+  let altSubmissions = options.altSubmissions;
+  const hosts = new Map<View, HTMLElement>();
   let scheduled = false;
 
   document.adoptedStyleSheets = [...document.adoptedStyleSheets, hiddenStyle];
@@ -101,28 +118,31 @@ export function installGradingTabs(loadPanel: () => Promise<PanelModule>) {
     });
   };
 
-  const dropHost = () => {
-    if (!host) return;
-    const old = host;
-    host = null;
+  const dropHost = (view: View) => {
+    const old = hosts.get(view);
+    if (!old) return;
+    hosts.delete(view);
     loadPanel().then(panel => panel.unmountPanel(old));
     old.remove();
   };
 
-  const ensureHost = (wrapper: HTMLElement, courseId: number) => {
-    if (host && host.dataset.courseId !== String(courseId)) dropHost();
-    if (host) return host;
+  const ensureHost = (view: View, wrapper: HTMLElement, courseId: number) => {
+    const existing = hosts.get(view);
+    if (existing && existing.dataset.courseId !== String(courseId)) dropHost(view);
+    const current = hosts.get(view);
+    if (current) return current;
     const el = document.createElement('div');
     el.className = 'sad-root';
     el.setAttribute(HOST_MARKER, INSTANCE);
     el.dataset.courseId = String(courseId);
-    el.textContent = 'Loading dashboard…';
+    el.textContent = LOADING_TEXT[view];
     wrapper.append(el);
-    host = el;
+    hosts.set(view, el);
     loadPanel().then(panel => {
-      if (host !== el) return; // Replaced or dropped while panel.js was loading.
+      if (hosts.get(view) !== el) return; // Replaced or dropped while panel.js was loading.
       el.textContent = '';
-      panel.mountDashboard(el, courseId);
+      if (view === 'dashboard') panel.mountDashboard(el, courseId);
+      else panel.mountSubmissions(el, courseId);
     });
     return el;
   };
@@ -144,8 +164,11 @@ export function installGradingTabs(loadPanel: () => Promise<PanelModule>) {
       .forEach(el => el.removeAttribute(HIDDEN_MARKER));
 
     const wrapper = findWrapper();
-    // SA rebuilt or left the page, and the heatmap went with its DOM.
-    if (host && host.parentElement !== wrapper) dropHost();
+    // SA rebuilt or left the page, and our views went with its DOM.
+    for (const [view, host] of hosts) {
+      if (host.parentElement !== wrapper) dropHost(view);
+    }
+    if (!altSubmissions) dropHost('submissions');
 
     const courseId = currentCourseId();
     trackVisit(courseId);
@@ -164,17 +187,22 @@ export function installGradingTabs(loadPanel: () => Promise<PanelModule>) {
       tab.setAttribute('aria-selected', String(tab.dataset.mode === mode));
     });
 
+    // Which of our views replaces SA's table, if any (null: SA's own submissions table).
+    const shown: View | null =
+      mode === 'dashboard' ? 'dashboard' : altSubmissions ? 'submissions' : null;
     const hide = new Set<Element>([title]);
-    if (mode === 'dashboard') {
-      const dashboard = ensureHost(wrapper, courseId);
+    if (shown) {
+      const active = ensureHost(shown, wrapper, courseId);
       for (const child of wrapper.children) {
-        if (child !== titleRow && child !== dashboard) hide.add(child);
+        if (child !== titleRow && child !== active) hide.add(child);
       }
+      // SA's export belongs to its submissions table.
       const exportButton = titleRow.querySelector('.export-csv-btn');
-      if (exportButton) hide.add(exportButton);
-    } else if (host) {
-      // Kept mounted, so switching back is instant.
-      hide.add(host);
+      if (shown === 'dashboard' && exportButton) hide.add(exportButton);
+    }
+    // The other views stay mounted while hidden, so switching back is instant.
+    for (const [view, host] of hosts) {
+      if (view !== shown) hide.add(host);
     }
 
     document.querySelectorAll(`[${HIDDEN_MARKER}="${INSTANCE}"]`).forEach(el => {
@@ -192,4 +220,11 @@ export function installGradingTabs(loadPanel: () => Promise<PanelModule>) {
   });
   observer.observe(document.body, { childList: true, subtree: true });
   sync();
+
+  return {
+    setAltSubmissions(enabled) {
+      altSubmissions = enabled;
+      sync();
+    },
+  };
 }

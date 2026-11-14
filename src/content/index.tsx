@@ -76,10 +76,13 @@ async function main() {
     },
     settings,
   );
-  installGradingTabs(loadPanel);
+  const gradingTabs = installGradingTabs(loadPanel, { altSubmissions: settings.useAltSubmissions });
   onSettingsChanged(changes => {
     if (changes.replaceGameSimulator !== undefined) {
       nav.setReplaceGameSimulator(changes.replaceGameSimulator);
+    }
+    if (changes.useAltSubmissions !== undefined) {
+      gradingTabs.setAltSubmissions(changes.useAltSubmissions);
     }
   });
 }
