@@ -177,12 +177,12 @@ export function fetchSummary(data: DataState, filtered: FilterResult | null): st
   const { result, rows } = data;
   if (!result) return null;
   const hidden = filtered?.hidden;
-  const hiddenTotal = hidden ? hidden.own + hidden.groups : 0;
+  const hiddenTotal = hidden ? hidden.own + hidden.tutors + hidden.groups : 0;
   return (
     `${rows.length.toLocaleString()} submissions fetched in ${(result.ms / 1000).toFixed(1)}s ` +
     `at ${result.fetchedAt.toLocaleTimeString()}` +
     (hiddenTotal > 0
-      ? ` · ${hiddenTotal.toLocaleString()} hidden by settings (own: ${hidden!.own}, groups: ${hidden!.groups})`
+      ? ` · ${hiddenTotal.toLocaleString()} hidden by settings (own: ${hidden!.own}, tutors: ${hidden!.tutors}, groups: ${hidden!.groups})`
       : '')
   );
 }
@@ -202,7 +202,7 @@ export function FetchWarnings({ courseId, data, filtered }: FetchStatusProps) {
       {error && <p class="sad-status sad-error">Fetch failed: {error}</p>}
       {filtered?.ownIdUnknown && (
         <p class="sad-status sad-error">
-          Couldn't determine your id for course {courseId}, so your own submissions are not hidden.
+          Couldn't determine your id for course {courseId}, so your own submissions may not be hidden.
           Select this course in Source Academy and reload the page.
         </p>
       )}

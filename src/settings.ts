@@ -5,6 +5,8 @@ export type Settings = {
   replaceGameSimulator: boolean;
   /** Hide submissions made by the logged-in user. */
   hideOwnSubmissions: boolean;
+  /** Hide submissions made by any tutor (group leader) and by the logged-in user. */
+  hideTutorSubmissions: boolean;
   /** Hide submissions whose students are all in one of `hiddenGroups`. */
   hideGroups: boolean;
   /** Group names to hide, matched case-insensitively. Kept even while `hideGroups` is off. */
@@ -17,6 +19,7 @@ export const DEFAULT_HIDDEN_GROUPS = ['AWOL', 'NOTINCS1101S'];
 export const DEFAULT_SETTINGS: Settings = {
   replaceGameSimulator: false,
   hideOwnSubmissions: false,
+  hideTutorSubmissions: false,
   hideGroups: false,
   hiddenGroups: DEFAULT_HIDDEN_GROUPS,
 };

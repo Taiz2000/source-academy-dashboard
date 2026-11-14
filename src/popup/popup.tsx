@@ -92,6 +92,11 @@ function Popup() {
       <h1>Grading Dashboard</h1>
       <Toggle settings={settings} name="replaceGameSimulator" label="Replace Game Simulator button" />
       <Toggle settings={settings} name="hideOwnSubmissions" label="Hide your own submissions" />
+      <Toggle
+        settings={settings}
+        name="hideTutorSubmissions"
+        label="Hide all tutors' submissions (including yours)"
+      />
       <Toggle settings={settings} name="hideGroups" label="Hide groups" />
       <HiddenGroupsEditor settings={settings} />
     </>

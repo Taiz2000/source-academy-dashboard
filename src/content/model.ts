@@ -62,6 +62,8 @@ export type Member = {
   username: string;
   /** "-" when the student has no group. */
   groupName: string;
+  /** Course registration id of the student's group leader (tutor); null without a group. */
+  groupLeaderId: number | null;
 };
 
 export type Submission = {
@@ -101,6 +103,7 @@ export function normalize(s: RawSubmission): Submission {
     name: u.name,
     username: u.username,
     groupName: u.groupName ?? '-',
+    groupLeaderId: u.groupLeaderId ?? null,
   }));
   return {
     id: s.id,
