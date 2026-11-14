@@ -1,4 +1,5 @@
 import { loadSettings, onSettingsChanged } from '../settings';
+import { installGradingTabs } from './grading';
 import { installNavButton, type NavButton } from './navbar';
 import { currentCourseId } from './session';
 
@@ -75,6 +76,7 @@ async function main() {
     },
     settings,
   );
+  installGradingTabs(loadPanel);
   onSettingsChanged(changes => {
     if (changes.replaceGameSimulator !== undefined) {
       nav.setReplaceGameSimulator(changes.replaceGameSimulator);

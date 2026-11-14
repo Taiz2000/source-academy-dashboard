@@ -2,21 +2,11 @@
 // (AcademyNavigationBar.tsx). React owns that DOM and re-renders it on navigation, so a
 // MutationObserver keeps re-inserting the button.
 
+import { extensionAlive, INSTANCE } from './instance';
+
 const MARKER = 'data-sa-dashboard-nav';
 const HIDDEN_MARKER = 'data-sa-dashboard-hidden';
 const LABEL = 'Grading Dashboard';
-
-// Reloading the extension leaves the old content script running in open tabs. Each instance tags
-// the button it owns, and an orphaned instance stops itself, so two copies never fight over it.
-const INSTANCE = crypto.randomUUID();
-
-function extensionAlive(): boolean {
-  try {
-    return !!chrome.runtime?.id;
-  } catch {
-    return false;
-  }
-}
 
 export type NavButton = {
   setActive(active: boolean): void;
